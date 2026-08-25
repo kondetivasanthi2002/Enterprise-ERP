@@ -106,6 +106,8 @@
     .btn-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #ffffff; }
     .btn-secondary { background: var(--bg-elevated); color: var(--text-main); border-color: var(--border-color); }
     .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--border-color-strong); }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+    .btn-danger-sm { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
     .badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.65rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; }
     .badge-success { background: var(--color-success-bg); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -135,6 +137,14 @@
     .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); white-space: nowrap; }
     .data-table tbody tr:hover { background-color: var(--bg-card-hover); }
     .mono { font-family: var(--font-mono); }
+
+    /* Modal Styles */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1.5rem; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border-color-strong); border-radius: var(--radius-lg); width: 100%; max-width: 550px; box-shadow: var(--shadow-lg); overflow: hidden; }
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; background: var(--bg-elevated); }
   </style>
 </head>
 <body class="dark-theme">
@@ -163,80 +173,51 @@
       { id: 'admin', name: 'Admin, RBAC & Audit', badge: 'Security' }
     ];
 
-    // Enterprise Mock Data Generators
-    const generateInvoices = () => Array.from({ length: 20 }, (_, i) => ({
-      id: `INV-2026-${100 + i}`,
-      client: ['Acme Tech Corp', 'Nexus Global Systems', 'Starlight Logistics', 'Vanguard Health', 'Hyperion Dynamics'][i % 5],
-      date: `2026-0${(i % 7) + 1}-12`,
-      dueDate: `2026-0${(i % 7) + 2}-12`,
-      total: Math.floor(15000 + Math.random() * 85000),
-      status: ['Paid', 'Pending', 'Overdue'][i % 3]
-    }));
+    // Enterprise Initial Data Generators
+    const initialInvoices = [
+      { id: 'INV-2026-101', client: 'Acme Tech Corp', date: '2026-01-12', dueDate: '2026-02-12', total: 45000, status: 'Paid' },
+      { id: 'INV-2026-102', client: 'Nexus Global Systems', date: '2026-01-15', dueDate: '2026-02-15', total: 78000, status: 'Pending' },
+      { id: 'INV-2026-103', client: 'Starlight Logistics', date: '2026-02-01', dueDate: '2026-03-01', total: 32000, status: 'Paid' },
+      { id: 'INV-2026-104', client: 'Vanguard Health', date: '2026-02-10', dueDate: '2026-03-10', total: 95000, status: 'Overdue' }
+    ];
 
-    const generateInventory = () => Array.from({ length: 20 }, (_, i) => ({
-      id: `SKU-${1000 + i}`,
-      name: `Apex Component Module #${i + 1}`,
-      category: ['Hardware', 'Electronics', 'Raw Materials'][i % 3],
-      warehouse: ['WH-Alpha (Chicago)', 'WH-Beta (Frankfurt)', 'WH-Gamma (Tokyo)'][i % 3],
-      qtyOnHand: Math.floor(15 + Math.random() * 600),
-      unitCost: (45 + Math.random() * 300).toFixed(2),
-      status: i % 4 === 0 ? 'Low Stock Warning' : 'Optimal Stock'
-    }));
+    const initialInventory = [
+      { id: 'SKU-1001', name: 'Apex Server License Unit', category: 'Hardware', warehouse: 'WH-Alpha (Chicago)', qtyOnHand: 145, unitCost: 1200.00, status: 'Optimal Stock' },
+      { id: 'SKU-1002', name: 'IoT Telemetry Gateway v2', category: 'Electronics', warehouse: 'WH-Beta (Frankfurt)', qtyOnHand: 18, unitCost: 320.00, status: 'Low Stock Warning' },
+      { id: 'SKU-1003', name: 'Rugged RFID Scanner Terminal', category: 'Hardware', warehouse: 'WH-Gamma (Tokyo)', qtyOnHand: 65, unitCost: 450.00, status: 'Optimal Stock' }
+    ];
 
-    const generateLeads = () => Array.from({ length: 18 }, (_, i) => ({
-      id: `LEAD-${300 + i}`,
-      company: ['BioGenX Labs', 'CyberSec Sentinel', 'Orbital Aerospace', 'FinTech Horizon'][i % 4] + ` (${i+1})`,
-      contact: `Executive Lead ${i+1}`,
-      value: Math.floor(45000 + Math.random() * 250000),
-      stage: ['Lead Qualification', 'Needs Analysis', 'Proposal Sent', 'Contract Review', 'Closed Won'][i % 5],
-      owner: ['Sarah Jenkins', 'David Chen', 'Marcus Vance'][i % 3]
-    }));
+    const initialLeads = [
+      { id: 'LEAD-301', company: 'BioGenX Labs', contact: 'Dr. Aris Thorne', value: 125000, stage: 'Proposal Sent', owner: 'Sarah Jenkins' },
+      { id: 'LEAD-302', company: 'CyberSec Sentinel', contact: 'Marcus Vance', value: 85000, stage: 'Lead Qualification', owner: 'David Chen' },
+      { id: 'LEAD-303', company: 'Orbital Aerospace', contact: 'Eleanor Vance', value: 240000, stage: 'Closed Won', owner: 'Sarah Jenkins' }
+    ];
 
-    const generateEmployees = () => Array.from({ length: 20 }, (_, i) => ({
-      id: `EMP-${500 + i}`,
-      name: `Employee Name ${i + 1}`,
-      department: ['Engineering', 'Finance', 'Sales', 'Operations'][i % 4],
-      role: ['Senior Systems Architect', 'Financial Controller', 'Account Executive'][i % 3],
-      salaryMonthly: Math.floor(6500 + Math.random() * 8500),
-      netPayMonthly: Math.floor(5200 + Math.random() * 6800),
-      status: 'Active'
-    }));
+    const initialEmployees = [
+      { id: 'EMP-501', name: 'Alexander Wright', department: 'Executive Management', role: 'Chief Executive Officer', salaryMonthly: 18500, netPayMonthly: 14800, status: 'Active' },
+      { id: 'EMP-502', name: 'Sophia Martinez', department: 'Finance & Accounting', role: 'Chief Financial Officer', salaryMonthly: 14500, netPayMonthly: 11600, status: 'Active' },
+      { id: 'EMP-503', name: 'Julian Kovac', department: 'Engineering & R&D', role: 'Principal Architect', salaryMonthly: 12500, netPayMonthly: 10000, status: 'Active' }
+    ];
 
-    const generateVendors = () => Array.from({ length: 15 }, (_, i) => ({
-      id: `VEND-${800 + i}`,
-      name: `Supplier Vendor Co #${i + 1}`,
-      contact: `Vendor Manager ${i + 1}`,
-      category: ['Semiconductors', 'Aluminum Alloys', 'Cloud Infra'][i % 3],
-      outstandingBalance: Math.floor(12000 + Math.random() * 65000),
-      rating: '5.0★'
-    }));
+    const initialVendors = [
+      { id: 'VEND-801', name: 'Silicon Microfabrication Corp', contact: 'Chen Wei', category: 'Semiconductors', outstandingBalance: 34000, rating: '5.0★' },
+      { id: 'VEND-802', name: 'Metals & Alloys Supply Co', contact: 'Sarah Jenkins', category: 'Aluminum Alloys', outstandingBalance: 64000, rating: '4.8★' }
+    ];
 
-    const generateWorkOrders = () => Array.from({ length: 12 }, (_, i) => ({
-      id: `WO-${400 + i}`,
-      parentItemSku: `APX-HW-500`,
-      bomId: 'BOM-IOT-500',
-      targetQty: (i + 1) * 10,
-      status: ['PLANNED', 'IN_PROGRESS', 'QUALITY_CHECK', 'COMPLETED'][i % 4],
-      estCost: Math.floor(8500 + Math.random() * 45000)
-    }));
+    const initialWorkOrders = [
+      { id: 'WO-401', parentItemSku: 'APX-HW-500', bomId: 'BOM-IOT-500', targetQty: 50, status: 'IN_PROGRESS', estCost: 24000 },
+      { id: 'WO-402', parentItemSku: 'APX-SER-001', bomId: 'BOM-SER-100', targetQty: 20, status: 'PLANNED', estCost: 48000 }
+    ];
 
-    const generateProjects = () => Array.from({ length: 10 }, (_, i) => ({
-      id: `PRJ-${700 + i}`,
-      name: `Enterprise Implementation Phase ${i + 1}`,
-      client: `Global Client #${i + 1}`,
-      budgetUSD: Math.floor(120000 + Math.random() * 350000),
-      progress: `${(i + 1) * 9}%`,
-      status: i % 3 === 0 ? 'On Track' : 'In Review'
-    }));
+    const initialProjects = [
+      { id: 'PRJ-701', name: 'Global ERP Migration Phase 1', client: 'Acme Tech Corp', budgetUSD: 250000, progress: '65%', status: 'On Track' },
+      { id: 'PRJ-702', name: 'IoT Telemetry Fleet Deployment', client: 'Starlight Logistics', budgetUSD: 180000, progress: '40%', status: 'In Review' }
+    ];
 
-    const generateAuditLogs = () => Array.from({ length: 15 }, (_, i) => ({
-      id: `AUD-${900 + i}`,
-      timestamp: `2026-08-25 11:${10 + i}:00`,
-      user: `Admin User ${i % 3 + 1}`,
-      role: ['FINANCE_MANAGER', 'INVENTORY_MANAGER', 'SUPER_ADMIN'][i % 3],
-      action: ['POST_JOURNAL_ENTRY', 'RECEIVE_STOCK_GRN', 'EXECUTE_PAYROLL'][i % 3],
-      ip: '127.0.0.1'
-    }));
+    const initialAuditLogs = [
+      { id: 'AUD-901', timestamp: '2026-08-25 11:30:00', user: 'Alex Mercer', role: 'SUPER_ADMIN', action: 'POST_JOURNAL_ENTRY', ip: '127.0.0.1' },
+      { id: 'AUD-902', timestamp: '2026-08-25 11:45:00', user: 'Sophia Martinez', role: 'FINANCE_MANAGER', action: 'EXECUTE_PAYROLL', ip: '127.0.0.1' }
+    ];
 
     // React Context
     const ERPContext = createContext();
@@ -246,21 +227,42 @@
       const [activeSubsidiary, setActiveSubsidiary] = useState(SUBSIDIARIES[0]);
       const [activeModule, setActiveModule] = useState('dashboard');
       const [searchQuery, setSearchQuery] = useState('');
+      const [toast, setToast] = useState(null);
 
-      const invoices = useMemo(() => generateInvoices(), []);
-      const inventory = useMemo(() => generateInventory(), []);
-      const leads = useMemo(() => generateLeads(), []);
-      const employees = useMemo(() => generateEmployees(), []);
-      const vendors = useMemo(() => generateVendors(), []);
-      const workOrders = useMemo(() => generateWorkOrders(), []);
-      const projects = useMemo(() => generateProjects(), []);
-      const auditLogs = useMemo(() => generateAuditLogs(), []);
+      // State Repositories (Editable & Updatable)
+      const [invoices, setInvoices] = useState(initialInvoices);
+      const [inventory, setInventory] = useState(initialInventory);
+      const [leads, setLeads] = useState(initialLeads);
+      const [employees, setEmployees] = useState(initialEmployees);
+      const [vendors, setVendors] = useState(initialVendors);
+      const [workOrders, setWorkOrders] = useState(initialWorkOrders);
+      const [projects, setProjects] = useState(initialProjects);
+      const [auditLogs, setAuditLogs] = useState(initialAuditLogs);
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3500);
+      };
+
+      const addAuditLog = (action, user = 'Alex Mercer') => {
+        const newLog = {
+          id: `AUD-${Date.now().toString().slice(-4)}`,
+          timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+          user,
+          role: 'SUPER_ADMIN',
+          action,
+          ip: '127.0.0.1'
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+      };
 
       return (
         <ERPContext.Provider value={{
           theme, setTheme, activeSubsidiary, setActiveSubsidiary,
-          activeModule, setActiveModule, searchQuery, setSearchQuery,
-          invoices, inventory, leads, employees, vendors, workOrders, projects, auditLogs
+          activeModule, setActiveModule, searchQuery, setSearchQuery, toast, showToast,
+          invoices, setInvoices, inventory, setInventory, leads, setLeads,
+          employees, setEmployees, vendors, setVendors, workOrders, setWorkOrders,
+          projects, setProjects, auditLogs, setAuditLogs, addAuditLog
         }}>
           {children}
         </ERPContext.Provider>
@@ -269,7 +271,7 @@
 
     // Header Component
     const Header = () => {
-      const { activeSubsidiary, setActiveSubsidiary, searchQuery, setSearchQuery } = useContext(ERPContext);
+      const { activeSubsidiary, setActiveSubsidiary, searchQuery, setSearchQuery, toast } = useContext(ERPContext);
       return (
         <header style={{ height: '65px', background: 'var(--bg-header)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem' }}>
           <input
@@ -294,11 +296,17 @@
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '0.75rem' }}>
               <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>EX</div>
               <div>
-                <div style={{ fontSize: '0.825rem', fontWeight: 700 }}>Executive User</div>
+                <div style={{ fontSize: '0.825rem', fontWeight: 700 }}>Alex Mercer</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Super Admin</div>
               </div>
             </div>
           </div>
+
+          {toast && (
+            <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--bg-card)', border: '1px solid var(--accent-primary)', color: '#fff', padding: '0.85rem 1.4rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 999 }}>
+              ✨ {toast}
+            </div>
+          )}
         </header>
       );
     };
@@ -341,7 +349,7 @@
     };
 
     // Table Component Utility
-    const DataTable = ({ columns, data }) => {
+    const DataTable = ({ columns, data, onDelete }) => {
       const { searchQuery } = useContext(ERPContext);
       const filtered = useMemo(() => {
         if (!searchQuery) return data;
@@ -355,12 +363,18 @@
             <thead>
               <tr>
                 {columns.map(c => <th key={c.key}>{c.label}</th>)}
+                {onDelete && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filtered.map((row, idx) => (
                 <tr key={row.id || idx}>
                   {columns.map(c => <td key={c.key}>{c.render ? c.render(row[c.key], row) : row[c.key]}</td>)}
+                  {onDelete && (
+                    <td>
+                      <button className="btn btn-sm btn-danger-sm" onClick={() => onDelete(row.id)}>Delete</button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -369,7 +383,7 @@
       );
     };
 
-    // --- MODULE VIEWS IMPLEMENTATION ---
+    // --- MODULE VIEWS & EDIT/ADD MODALS ---
 
     // 1. Dashboard Module
     const DashboardModule = () => {
@@ -413,9 +427,36 @@
       );
     };
 
-    // 2. Finance Module
+    // 2. Finance Module (With Add & Delete Functionality)
     const FinanceModule = () => {
-      const { invoices, activeSubsidiary } = useContext(ERPContext);
+      const { invoices, setInvoices, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [client, setClient] = useState('');
+      const [total, setTotal] = useState(25000);
+
+      const handleAddInvoice = (e) => {
+        e.preventDefault();
+        const newInv = {
+          id: `INV-2026-${100 + invoices.length + 1}`,
+          client,
+          date: new Date().toISOString().slice(0, 10),
+          dueDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+          total: Number(total),
+          status: 'Pending'
+        };
+        setInvoices([newInv, ...invoices]);
+        addAuditLog(`POST_JOURNAL_INVOICE (${newInv.id})`);
+        showToast(`Posted Journal Invoice ${newInv.id} for $${newInv.total.toLocaleString()}`);
+        setModalOpen(false);
+        setClient('');
+      };
+
+      const handleDeleteInvoice = (id) => {
+        setInvoices(invoices.filter(i => i.id !== id));
+        addAuditLog(`DELETE_INVOICE (${id})`);
+        showToast(`Deleted invoice ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Invoice ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'client', label: 'Customer / Client' },
@@ -432,16 +473,73 @@
               <h3 className="card-title">Financial Management & General Ledger</h3>
               <span className="card-subtitle">Double-entry ledger accounts, AR invoices, and trial balance</span>
             </div>
-            <button className="btn btn-primary">+ Post Journal Entry</button>
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>+ Post Journal Invoice</button>
           </div>
-          <DataTable columns={cols} data={invoices} />
+          <DataTable columns={cols} data={invoices} onDelete={handleDeleteInvoice} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Post New General Ledger Invoice</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddInvoice}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Client / Customer Name</label>
+                      <input className="form-input" required value={client} onChange={e => setClient(e.target.value)} placeholder="e.g. Global Tech Corp" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Invoice Amount ($ USD)</label>
+                      <input className="form-input" type="number" required value={total} onChange={e => setTotal(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save & Post Invoice</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
-    // 3. Inventory Module
+    // 3. Inventory Module (With Restock / Edit Stock Functionality)
     const InventoryModule = () => {
-      const { inventory, activeSubsidiary } = useContext(ERPContext);
+      const { inventory, setInventory, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [name, setName] = useState('');
+      const [category, setCategory] = useState('Hardware');
+      const [qty, setQty] = useState(50);
+      const [unitCost, setUnitCost] = useState(150);
+
+      const handleAddStock = (e) => {
+        e.preventDefault();
+        const newItem = {
+          id: `SKU-${1000 + inventory.length + 1}`,
+          name,
+          category,
+          warehouse: 'WH-Alpha (Chicago)',
+          qtyOnHand: Number(qty),
+          unitCost: Number(unitCost).toFixed(2),
+          status: qty <= 20 ? 'Low Stock Warning' : 'Optimal Stock'
+        };
+        setInventory([newItem, ...inventory]);
+        addAuditLog(`RECEIVE_STOCK_ITEM (${newItem.id})`);
+        showToast(`Added stock SKU ${newItem.id} (${newItem.name})`);
+        setModalOpen(false);
+        setName('');
+      };
+
+      const handleDeleteItem = (id) => {
+        setInventory(inventory.filter(i => i.id !== id));
+        addAuditLog(`DELETE_STOCK_SKU (${id})`);
+        showToast(`Deleted SKU ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'SKU Code', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'name', label: 'Item Description' },
@@ -459,16 +557,84 @@
               <h3 className="card-title">Supply Chain & Inventory Management</h3>
               <span className="card-subtitle">FIFO inventory valuation, reorder points, and warehouse logs</span>
             </div>
-            <button className="btn btn-success">+ Receive Inbound Stock</button>
+            <button className="btn btn-success" onClick={() => setModalOpen(true)}>+ Add Stock Item</button>
           </div>
-          <DataTable columns={cols} data={inventory} />
+          <DataTable columns={cols} data={inventory} onDelete={handleDeleteItem} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Receive Inbound Stock Item</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddStock}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Item Description</label>
+                      <input className="form-input" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. ARM Controller PCB Board" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Category</label>
+                      <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Raw Materials">Raw Materials</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Quantity Received</label>
+                      <input className="form-input" type="number" required value={qty} onChange={e => setQty(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Unit Cost ($)</label>
+                      <input className="form-input" type="number" step="0.01" required value={unitCost} onChange={e => setUnitCost(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-success">Save & Receive Stock</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
-    // 4. Sales & CRM Module
+    // 4. Sales & CRM Module (With Add Lead Functionality)
     const SalesModule = () => {
-      const { leads, activeSubsidiary } = useContext(ERPContext);
+      const { leads, setLeads, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [company, setCompany] = useState('');
+      const [contact, setContact] = useState('');
+      const [value, setValue] = useState(75000);
+
+      const handleAddLead = (e) => {
+        e.preventDefault();
+        const newLead = {
+          id: `LEAD-${300 + leads.length + 1}`,
+          company,
+          contact,
+          value: Number(value),
+          stage: 'Lead Qualification',
+          owner: 'Alex Mercer'
+        };
+        setLeads([newLead, ...leads]);
+        addAuditLog(`CREATE_CRM_LEAD (${newLead.id})`);
+        showToast(`Created CRM Lead ${newLead.id} for ${newLead.company}`);
+        setModalOpen(false);
+        setCompany('');
+        setContact('');
+      };
+
+      const handleDeleteLead = (id) => {
+        setLeads(leads.filter(l => l.id !== id));
+        addAuditLog(`DELETE_LEAD (${id})`);
+        showToast(`Deleted lead ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Lead ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'company', label: 'Prospect Company' },
@@ -485,16 +651,82 @@
               <h3 className="card-title">Sales & CRM Deal Pipeline</h3>
               <span className="card-subtitle">Opportunity funnel, lead scores, and quote generation</span>
             </div>
-            <button className="btn btn-primary">+ Create CRM Lead</button>
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>+ Create CRM Lead</button>
           </div>
-          <DataTable columns={cols} data={leads} />
+          <DataTable columns={cols} data={leads} onDelete={handleDeleteLead} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Create New CRM Deal Lead</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddLead}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Company Name</label>
+                      <input className="form-input" required value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. Quantum Cybernetics" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Contact Person</label>
+                      <input className="form-input" required value={contact} onChange={e => setContact(e.target.value)} placeholder="e.g. Dr. Aris Thorne" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Projected Deal Value ($)</label>
+                      <input className="form-input" type="number" required value={value} onChange={e => setValue(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save CRM Lead</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // 5. Human Capital & Payroll Module (HCM)
     const HCMModule = () => {
-      const { employees, activeSubsidiary } = useContext(ERPContext);
+      const { employees, setEmployees, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [name, setName] = useState('');
+      const [department, setDepartment] = useState('Engineering');
+      const [role, setRole] = useState('Senior Systems Engineer');
+      const [salary, setSalary] = useState(8500);
+
+      const handleAddEmployee = (e) => {
+        e.preventDefault();
+        const newEmp = {
+          id: `EMP-${500 + employees.length + 1}`,
+          name,
+          department,
+          role,
+          salaryMonthly: Number(salary),
+          netPayMonthly: Math.round(Number(salary) * 0.8),
+          status: 'Active'
+        };
+        setEmployees([newEmp, ...employees]);
+        addAuditLog(`ADD_EMPLOYEE (${newEmp.id})`);
+        showToast(`Added employee ${newEmp.name} (${newEmp.id})`);
+        setModalOpen(false);
+        setName('');
+      };
+
+      const handleExecutePayroll = () => {
+        addAuditLog(`EXECUTE_MONTHLY_PAYROLL_RUN`);
+        showToast(`Monthly Payroll executed successfully for ${employees.length} active employees!`);
+      };
+
+      const handleDeleteEmployee = (id) => {
+        setEmployees(employees.filter(e => e.id !== id));
+        addAuditLog(`TERMINATE_EMPLOYEE (${id})`);
+        showToast(`Removed employee ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Employee ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'name', label: 'Employee Name' },
@@ -512,16 +744,86 @@
               <h3 className="card-title">Human Capital Management & Payroll Processing</h3>
               <span className="card-subtitle">Employee roster, progressive tax withholding, and monthly payroll</span>
             </div>
-            <button className="btn btn-purple">▶ Execute Monthly Payroll Run</button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-secondary" onClick={() => setModalOpen(true)}>+ Add Employee</button>
+              <button className="btn btn-purple" onClick={handleExecutePayroll}>▶ Execute Monthly Payroll Run</button>
+            </div>
           </div>
-          <DataTable columns={cols} data={employees} />
+          <DataTable columns={cols} data={employees} onDelete={handleDeleteEmployee} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Add Employee to Roster</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddEmployee}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Full Name</label>
+                      <input className="form-input" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Elena Rostova" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Department</label>
+                      <select className="form-select" value={department} onChange={e => setDepartment(e.target.value)}>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Operations">Operations</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Designation Title</label>
+                      <input className="form-input" required value={role} onChange={e => setRole(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Monthly Gross Base Salary ($)</label>
+                      <input className="form-input" type="number" required value={salary} onChange={e => setSalary(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-purple">Save Employee</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // 6. Procurement Module
     const ProcurementModule = () => {
-      const { vendors, activeSubsidiary } = useContext(ERPContext);
+      const { vendors, setVendors, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [name, setName] = useState('');
+      const [category, setCategory] = useState('Semiconductors');
+
+      const handleAddVendor = (e) => {
+        e.preventDefault();
+        const newVend = {
+          id: `VEND-${800 + vendors.length + 1}`,
+          name,
+          contact: 'Account Rep',
+          category,
+          outstandingBalance: 15000,
+          rating: '5.0★'
+        };
+        setVendors([newVend, ...vendors]);
+        addAuditLog(`ADD_VENDOR (${newVend.id})`);
+        showToast(`Added vendor ${newVend.name}`);
+        setModalOpen(false);
+        setName('');
+      };
+
+      const handleDeleteVendor = (id) => {
+        setVendors(vendors.filter(v => v.id !== id));
+        addAuditLog(`DELETE_VENDOR (${id})`);
+        showToast(`Deleted vendor ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Vendor ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'name', label: 'Supplier Name' },
@@ -538,16 +840,72 @@
               <h3 className="card-title">Procurement & Vendor Management</h3>
               <span className="card-subtitle">Purchase Orders, Goods Receipt Notes (GRN), and Accounts Payable</span>
             </div>
-            <button className="btn btn-primary">+ Create Purchase Order (PO)</button>
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>+ Create Purchase Order (PO)</button>
           </div>
-          <DataTable columns={cols} data={vendors} />
+          <DataTable columns={cols} data={vendors} onDelete={handleDeleteVendor} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Create Purchase Order Vendor Entry</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddVendor}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Supplier Company Name</label>
+                      <input className="form-input" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Microfabrication Corp" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Supply Category</label>
+                      <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                        <option value="Semiconductors">Semiconductors</option>
+                        <option value="Aluminum Alloys">Aluminum Alloys</option>
+                        <option value="Cloud Infra">Cloud Infra</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save Purchase Order</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // 7. Manufacturing & MRP Module
     const MRPModule = () => {
-      const { workOrders, activeSubsidiary } = useContext(ERPContext);
+      const { workOrders, setWorkOrders, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [targetQty, setTargetQty] = useState(30);
+
+      const handleAddWorkOrder = (e) => {
+        e.preventDefault();
+        const newWo = {
+          id: `WO-${400 + workOrders.length + 1}`,
+          parentItemSku: 'APX-HW-500',
+          bomId: 'BOM-IOT-500',
+          targetQty: Number(targetQty),
+          status: 'PLANNED',
+          estCost: Number(targetQty) * 350
+        };
+        setWorkOrders([newWo, ...workOrders]);
+        addAuditLog(`RELEASE_WORK_ORDER (${newWo.id})`);
+        showToast(`Released Work Order ${newWo.id} for ${newWo.targetQty} units`);
+        setModalOpen(false);
+      };
+
+      const handleDeleteWo = (id) => {
+        setWorkOrders(workOrders.filter(w => w.id !== id));
+        addAuditLog(`DELETE_WORK_ORDER (${id})`);
+        showToast(`Deleted Work Order ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Work Order ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'parentItemSku', label: 'Parent Product SKU' },
@@ -564,16 +922,70 @@
               <h3 className="card-title">Manufacturing & Material Requirements Planning (MRP)</h3>
               <span className="card-subtitle">Bill of Materials (BOM) resolver, Work Orders, and OEE capacity planning</span>
             </div>
-            <button className="btn btn-warning">▶ Release Work Order</button>
+            <button className="btn btn-warning" onClick={() => setModalOpen(true)}>▶ Release Work Order</button>
           </div>
-          <DataTable columns={cols} data={workOrders} />
+          <DataTable columns={cols} data={workOrders} onDelete={handleDeleteWo} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Release Production Work Order</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddWorkOrder}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Parent Product SKU</label>
+                      <input className="form-input" disabled value="APX-HW-500 (Industrial IoT Gateway)" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Target Quantity Output</label>
+                      <input className="form-input" type="number" required value={targetQty} onChange={e => setTargetQty(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-warning">Release Work Order</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // 8. Projects & Gantt Module
     const ProjectsModule = () => {
-      const { projects, activeSubsidiary } = useContext(ERPContext);
+      const { projects, setProjects, activeSubsidiary, showToast, addAuditLog } = useContext(ERPContext);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [name, setName] = useState('');
+      const [budget, setBudget] = useState(150000);
+
+      const handleAddProject = (e) => {
+        e.preventDefault();
+        const newPrj = {
+          id: `PRJ-${700 + projects.length + 1}`,
+          name,
+          client: 'Global Client',
+          budgetUSD: Number(budget),
+          progress: '10%',
+          status: 'On Track'
+        };
+        setProjects([newPrj, ...projects]);
+        addAuditLog(`CREATE_PROJECT (${newPrj.id})`);
+        showToast(`Created Project ${newPrj.name}`);
+        setModalOpen(false);
+        setName('');
+      };
+
+      const handleDeleteProject = (id) => {
+        setProjects(projects.filter(p => p.id !== id));
+        addAuditLog(`DELETE_PROJECT (${id})`);
+        showToast(`Deleted project ${id}`);
+      };
+
       const cols = [
         { key: 'id', label: 'Project ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
         { key: 'name', label: 'Project Name' },
@@ -590,16 +1002,43 @@
               <h3 className="card-title">Enterprise Project Portfolio Management</h3>
               <span className="card-subtitle">Milestones, task tracking, and budget commitments</span>
             </div>
-            <button className="btn btn-primary">+ Create New Project</button>
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>+ Create New Project</button>
           </div>
-          <DataTable columns={cols} data={projects} />
+          <DataTable columns={cols} data={projects} onDelete={handleDeleteProject} />
+
+          {modalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3 className="modal-title">Create New Enterprise Project</h3>
+                  <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <form onSubmit={handleAddProject}>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label className="form-label">Project Name</label>
+                      <input className="form-input" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. AI Vision Quality Control Rollout" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Budget ($ USD)</label>
+                      <input className="form-input" type="number" required value={budget} onChange={e => setBudget(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Create Project</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     };
 
     // 9. Analytics & BI Module
     const AnalyticsModule = () => {
-      const { activeSubsidiary } = useContext(ERPContext);
+      const { showToast } = useContext(ERPContext);
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="kpi-grid">
@@ -630,8 +1069,8 @@
             <h3 className="card-title">Custom BI Analytics & Financial Forecasting Engine</h3>
             <p className="card-subtitle" style={{ marginBottom: '1rem' }}>Export real-time multi-dimensional report snapshots</p>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="btn btn-secondary" onClick={() => alert('Exporting Financial Balance Sheet to CSV...')}>📥 Export Financial Balance Sheet (CSV)</button>
-              <button className="btn btn-secondary" onClick={() => alert('Exporting Inventory Stock Valuation to CSV...')}>📥 Export Stock Valuation Ledger (CSV)</button>
+              <button className="btn btn-secondary" onClick={() => showToast('Exported Financial Balance Sheet report to CSV file')}>📥 Export Balance Sheet (CSV)</button>
+              <button className="btn btn-secondary" onClick={() => showToast('Exported Stock Valuation report to CSV file')}>📥 Export Inventory Ledger (CSV)</button>
             </div>
           </div>
         </div>
