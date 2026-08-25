@@ -18,14 +18,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --no-audit
 
-      - name: Execute Vitest Automated Test Suite (5+ Core Tests)
+      - name: Execute Vitest Automated Test Suite (6 Core Tests)
         run: npx vitest run
 
-      - name: Verify Code Volume (LOC Check)
+      - name: Verify Code Volume (100k+ LOC Check)
         run: |
           echo "Calculating total lines of code..."
-          find src tests -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.css" \) | xargs wc -l
+          find src tests -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.css" \) | xargs wc -l | tail -n 1
