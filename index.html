@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexERP Enterprise Platform | Next-Gen Business Suite</title>
+  <meta name="description" content="Comprehensive Enterprise Resource Planning system featuring Financials, Inventory, CRM, HCM, MRP, Projects, and BI Analytics.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ApexERP Enterprise Platform Design System */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --bg-app: #0b0f19;
+      --bg-sidebar: #111827;
+      --bg-header: rgba(17, 24, 39, 0.85);
+      --bg-card: #1f293d;
+      --bg-card-hover: #26334d;
+      --bg-input: #151d2a;
+      --bg-elevated: #28354e;
+      
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color-strong: rgba(255, 255, 255, 0.16);
+
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-subtle: #6b7280;
+
+      --accent-primary: #6366f1;
+      --accent-primary-hover: #4f46e5;
+      --accent-primary-light: rgba(99, 102, 241, 0.15);
+      --accent-secondary: #06b6d4;
+      --accent-purple: #8b5cf6;
+
+      --color-success: #10b981;
+      --color-success-bg: rgba(16, 185, 129, 0.15);
+      --color-warning: #f59e0b;
+      --color-warning-bg: rgba(245, 158, 11, 0.15);
+      --color-danger: #ef4444;
+      --color-danger-bg: rgba(239, 68, 68, 0.15);
+      --color-info: #3b82f6;
+      --color-info-bg: rgba(59, 130, 246, 0.15);
+
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
+      --glow-primary: 0 0 20px rgba(99, 102, 241, 0.25);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.light-theme {
+      --bg-app: #f4f6f9;
+      --bg-sidebar: #ffffff;
+      --bg-header: rgba(255, 255, 255, 0.9);
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-input: #f1f5f9;
+      --bg-elevated: #e2e8f0;
+
+      --border-color: #e2e8f0;
+      --border-color-strong: #cbd5e1;
+
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-subtle: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: var(--bg-app); color: var(--text-main); line-height: 1.5; overflow-x: hidden; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 4px; }
+
+    .app-container { display: flex; min-height: 100vh; width: 100vw; }
+    .main-layout { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-app); }
+    .content-viewport { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm); transition: border-color var(--transition-normal); }
+    .card:hover { border-color: var(--border-color-strong); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .card-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); }
+    .card-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.55rem 1.1rem; font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; transition: all var(--transition-fast); white-space: nowrap; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover)); color: #ffffff; box-shadow: var(--glow-primary); }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text-main); border-color: var(--border-color); }
+    .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--border-color-strong); }
+    .btn-outline { background: transparent; color: var(--text-main); border-color: var(--border-color-strong); }
+    .btn-outline:hover { background: var(--accent-primary-light); border-color: var(--accent-primary); color: var(--accent-primary); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+    .btn-icon { padding: 0.5rem; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); border: none; cursor: pointer; }
+    .btn-icon:hover { background: var(--bg-elevated); color: var(--text-main); }
+
+    .badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.65rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; }
+    .badge-success { background: var(--color-success-bg); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info { background: var(--color-info-bg); color: var(--color-info); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-neutral { background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border-color); }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+    .form-input, .form-select { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 0.875rem; outline: none; }
+    .form-input:focus, .form-select:focus { border-color: var(--accent-primary); }
+
+    .tabs-container { display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
+    .tab-btn { padding: 0.65rem 1.2rem; background: transparent; border: none; color: var(--text-muted); font-size: 0.875rem; font-weight: 600; cursor: pointer; position: relative; }
+    .tab-btn.active { color: var(--accent-primary); }
+    .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-primary); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .kpi-card { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-primary); }
+    .kpi-card.success::before { background: var(--color-success); }
+    .kpi-card.warning::before { background: var(--color-warning); }
+    .kpi-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .kpi-value { font-size: 1.65rem; font-weight: 800; color: var(--text-main); margin: 0.2rem 0; }
+    .kpi-change { font-size: 0.75rem; font-weight: 600; }
+    .kpi-icon-wrapper { width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--accent-primary-light); color: var(--accent-primary); display: flex; align-items: center; justify-content: center; }
+
+    .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    .data-table th { background: var(--bg-elevated); color: var(--text-muted); font-weight: 700; text-transform: uppercase; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-main); white-space: nowrap; }
+    .data-table tbody tr:hover { background-color: var(--bg-card-hover); }
+    .mono { font-family: var(--font-mono); }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1.5rem; }
+    .modal-content { background: var(--bg-card); border: 1px solid var(--border-color-strong); border-radius: var(--radius-lg); width: 100%; max-width: 650px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); overflow: hidden; }
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; background: var(--bg-elevated); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  </style>
+</head>
+<body class="dark-theme">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext, useMemo } = React;
+
+    // Subsidiaries & Modules
+    const SUBSIDIARIES = [
+      { id: 'sub-global', name: 'Apex Global HQ (New York)', currency: 'USD', symbol: '$' },
+      { id: 'sub-emea', name: 'Apex EMEA Ltd (London)', currency: 'GBP', symbol: '£' },
+      { id: 'sub-apac', name: 'Apex APAC Pte (Singapore)', currency: 'SGD', symbol: 'S$' }
+    ];
+
+    const MODULES = [
+      { id: 'dashboard', name: 'Executive Control Center', icon: 'layout-dashboard' },
+      { id: 'finance', name: 'Finance & Accounting', icon: 'dollar-sign' },
+      { id: 'inventory', name: 'Supply Chain & Inventory', icon: 'package' },
+      { id: 'sales', name: 'Sales & CRM Pipeline', icon: 'users' },
+      { id: 'hcm', name: 'Human Capital & Payroll', icon: 'user-check' },
+      { id: 'procurement', name: 'Procurement & Vendors', icon: 'shopping-cart' },
+      { id: 'mrp', name: 'Manufacturing & MRP', icon: 'cpu' },
+      { id: 'projects', name: 'Projects & Gantt Timeline', icon: 'briefcase' },
+      { id: 'analytics', name: 'BI & Custom Analytics', icon: 'bar-chart-3' },
+      { id: 'admin', name: 'Admin, RBAC & Audit', icon: 'shield-check' }
+    ];
+
+    // Mock Data Generator
+    const generateInvoices = () => Array.from({ length: 25 }, (_, i) => ({
+      id: `INV-2026-${100 + i}`,
+      client: ['Acme Tech Corp', 'Nexus Global Systems', 'Starlight Logistics', 'Vanguard Health', 'Hyperion Dynamics'][i % 5],
+      date: `2026-0${(i % 7) + 1}-12`,
+      dueDate: `2026-0${(i % 7) + 2}-12`,
+      amount: Math.floor(14000 + Math.random() * 95000),
+      total: Math.floor(15120 + Math.random() * 102600),
+      status: ['Paid', 'Pending', 'Overdue'][i % 3]
+    }));
+
+    const generateInventory = () => Array.from({ length: 20 }, (_, i) => ({
+      id: `SKU-${1000 + i}`,
+      name: `Enterprise Sensor Module #${i + 1}`,
+      category: ['Hardware', 'Robotics', 'Semiconductor'][i % 3],
+      warehouse: ['WH-Alpha (Chicago)', 'WH-Beta (Frankfurt)', 'WH-Gamma (Tokyo)'][i % 3],
+      qtyOnHand: Math.floor(15 + Math.random() * 600),
+      reorderLevel: 150,
+      unitCost: (45 + Math.random() * 300).toFixed(2),
+      status: i % 4 === 0 ? 'Low Stock Warning' : 'Optimal Stock'
+    }));
+
+    const generateLeads = () => Array.from({ length: 18 }, (_, i) => ({
+      id: `LEAD-${300 + i}`,
+      company: ['BioGenX Labs', 'CyberSec Sentinel', 'Orbital Aerospace', 'FinTech Horizon'][i % 4] + ` (${i+1})`,
+      value: Math.floor(45000 + Math.random() * 250000),
+      stage: ['New Lead', 'Qualification', 'Proposal Sent', 'Contract Negotiation', 'Closed Won'][i % 5],
+      owner: ['Sarah Jenkins', 'David Chen', 'Marcus Vance'][i % 3]
+    }));
+
+    const generateEmployees = () => Array.from({ length: 20 }, (_, i) => ({
+      id: `EMP-${500 + i}`,
+      name: `Employee Name ${i + 1}`,
+      email: `emp${i + 1}@apexerp.com`,
+      department: ['Engineering', 'Finance', 'Sales', 'Operations'][i % 4],
+      role: ['Senior Systems Architect', 'Financial Controller', 'Account Executive'][i % 3],
+      salary: Math.floor(80000 + Math.random() * 70000),
+      monthlyPayroll: ((80000 + Math.random() * 70000) / 12).toFixed(2),
+      status: 'Active'
+    }));
+
+    // React Context
+    const ERPContext = createContext();
+
+    const ERPProvider = ({ children }) => {
+      const [theme, setTheme] = useState('dark');
+      const [activeSubsidiary, setActiveSubsidiary] = useState(SUBSIDIARIES[0]);
+      const [activeModule, setActiveModule] = useState('dashboard');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [toast, setToast] = useState(null);
+
+      const [invoices, setInvoices] = useState(generateInvoices());
+      const [inventory, setInventory] = useState(generateInventory());
+      const [leads, setLeads] = useState(generateLeads());
+      const [employees, setEmployees] = useState(generateEmployees());
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3500);
+      };
+
+      const toggleTheme = () => {
+        const next = theme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        document.body.className = `${next}-theme`;
+        showToast(`Theme switched to ${next.toUpperCase()} mode`);
+      };
+
+      return (
+        <ERPContext.Provider value={{
+          theme, toggleTheme, activeSubsidiary, setActiveSubsidiary,
+          activeModule, setActiveModule, searchQuery, setSearchQuery, toast, showToast,
+          invoices, inventory, leads, employees
+        }}>
+          {children}
+        </ERPContext.Provider>
+      );
+    };
+
+    // Header Component
+    const Header = () => {
+      const { theme, toggleTheme, activeSubsidiary, setActiveSubsidiary, searchQuery, setSearchQuery, toast } = useContext(ERPContext);
+      return (
+        <header style={{ height: '65px', background: 'var(--bg-header)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem' }}>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Search records, invoices, SKUs or leads..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: '360px', borderRadius: '20px', fontSize: '0.825rem' }}
+          />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <select
+              value={activeSubsidiary.id}
+              onChange={(e) => setActiveSubsidiary(SUBSIDIARIES.find(s => s.id === e.target.value))}
+              className="form-select"
+              style={{ fontSize: '0.8rem', fontWeight: 600 }}
+            >
+              {SUBSIDIARIES.map(s => <option key={s.id} value={s.id}>{s.name} ({s.currency})</option>)}
+            </select>
+
+            <button className="btn-icon" onClick={toggleTheme} title="Toggle Theme">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '0.75rem' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>EX</div>
+              <div>
+                <div style={{ fontSize: '0.825rem', fontWeight: 700 }}>Alex Mercer</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>COO</div>
+              </div>
+            </div>
+          </div>
+
+          {toast && (
+            <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--bg-card)', border: '1px solid var(--accent-primary)', padding: '0.85rem 1.4rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 999 }}>
+              ✨ {toast}
+            </div>
+          )}
+        </header>
+      );
+    };
+
+    // Sidebar Component
+    const Sidebar = () => {
+      const { activeModule, setActiveModule } = useContext(ERPContext);
+      return (
+        <aside style={{ width: '260px', background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #6366f1, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>⚡</div>
+            <div>
+              <h1 style={{ fontSize: '1.1rem', fontWeight: 800 }}>ApexERP</h1>
+              <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 700 }}>ENTERPRISE SUITE</span>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', overflowY: 'auto' }}>
+            {MODULES.map(m => {
+              const active = activeModule === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setActiveModule(m.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', border: 'none',
+                    background: active ? 'var(--accent-primary-light)' : 'transparent',
+                    color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontWeight: active ? 700 : 500, fontSize: '0.85rem', cursor: 'pointer', textAlign: 'left'
+                  }}
+                >
+                  <span>{m.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+      );
+    };
+
+    // Table Utility
+    const DataTable = ({ columns, data }) => {
+      const { searchQuery } = useContext(ERPContext);
+      const filtered = useMemo(() => {
+        if (!searchQuery) return data;
+        const q = searchQuery.toLowerCase();
+        return data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(q)));
+      }, [data, searchQuery]);
+
+      return (
+        <div className="table-responsive">
+          <table className="data-table">
+            <thead>
+              <tr>
+                {columns.map(c => <th key={c.key}>{c.label}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row, idx) => (
+                <tr key={row.id || idx}>
+                  {columns.map(c => <td key={c.key}>{c.render ? c.render(row[c.key], row) : row[c.key]}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
+    // Dashboard Module
+    const DashboardModule = () => {
+      const { invoices, inventory, employees, activeSubsidiary } = useContext(ERPContext);
+      const totalRev = invoices.reduce((a, b) => a + b.total, 0);
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="kpi-grid">
+            <div className="kpi-card success">
+              <div>
+                <span className="kpi-label">Gross Accounts Receivable</span>
+                <div className="kpi-value">{activeSubsidiary.symbol}{(totalRev / 1000).toFixed(1)}k</div>
+                <div className="kpi-change" style={{ color: 'var(--color-success)' }}>+14.2% YTD Growth</div>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div>
+                <span className="kpi-label">Stock SKUs Tracked</span>
+                <div className="kpi-value">{inventory.length} SKUs</div>
+                <div className="kpi-change">4 Warehouses Active</div>
+              </div>
+            </div>
+            <div className="kpi-card warning">
+              <div>
+                <span className="kpi-label">Active Headcount</span>
+                <div className="kpi-value">{employees.length} Staff</div>
+                <div className="kpi-change" style={{ color: 'var(--color-warning)' }}>Payroll 100% On-Time</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="card-title" style={{ marginBottom: '1rem' }}>Executive Financial Telemetry</h3>
+            <svg viewBox="0 0 500 160" style={{ width: '100%', height: '180px' }}>
+              {[30, 70, 110, 150].map((y, i) => <line key={i} x1="20" y1={y} x2="480" y2={y} stroke="var(--border-color)" strokeDasharray="3 3" />)}
+              <polyline fill="none" stroke="var(--accent-primary)" strokeWidth="3" points="30,120 90,90 150,110 210,60 270,75 330,40 390,50 450,25" />
+            </svg>
+          </div>
+        </div>
+      );
+    };
+
+    // Finance Module
+    const FinanceModule = () => {
+      const { invoices, activeSubsidiary } = useContext(ERPContext);
+      const cols = [
+        { key: 'id', label: 'Invoice ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
+        { key: 'client', label: 'Customer / Client' },
+        { key: 'date', label: 'Issue Date' },
+        { key: 'dueDate', label: 'Due Date' },
+        { key: 'total', label: 'Total Incl. Tax', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{activeSubsidiary.symbol}{v.toLocaleString()}</span> },
+        { key: 'status', label: 'Status', render: (v) => <span className={`badge ${v === 'Paid' ? 'badge-success' : 'badge-warning'}`}>{v}</span> }
+      ];
+
+      return (
+        <div className="card">
+          <h3 className="card-title" style={{ marginBottom: '1rem' }}>General Ledger Accounts Receivable Invoices</h3>
+          <DataTable columns={cols} data={invoices} />
+        </div>
+      );
+    };
+
+    // Inventory Module
+    const InventoryModule = () => {
+      const { inventory, activeSubsidiary } = useContext(ERPContext);
+      const cols = [
+        { key: 'id', label: 'SKU ID', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v}</span> },
+        { key: 'name', label: 'Component Name' },
+        { key: 'category', label: 'Category' },
+        { key: 'warehouse', label: 'Warehouse Location' },
+        { key: 'qtyOnHand', label: 'Qty On Hand', render: (v) => <span className="mono" style={{ fontWeight: 700 }}>{v} units</span> },
+        { key: 'unitCost', label: 'Unit Cost', render: (v) => <span className="mono">{activeSubsidiary.symbol}{v}</span> },
+        { key: 'status', label: 'Stock Status', render: (v) => <span className={`badge ${v.includes('Warning') ? 'badge-warning' : 'badge-success'}`}>{v}</span> }
+      ];
+
+      return (
+        <div className="card">
+          <h3 className="card-title" style={{ marginBottom: '1rem' }}>Multi-Warehouse Inventory Stock Catalog</h3>
+          <DataTable columns={cols} data={inventory} />
+        </div>
+      );
+    };
+
+    // Main App Assembly
+    const App = () => {
+      const { activeModule } = useContext(ERPContext);
+
+      const renderView = () => {
+        switch (activeModule) {
+          case 'dashboard': return <DashboardModule />;
+          case 'finance': return <FinanceModule />;
+          case 'inventory': return <InventoryModule />;
+          default: return <DashboardModule />;
+        }
+      };
+
+      return (
+        <div className="app-container">
+          <Sidebar />
+          <div className="main-layout">
+            <Header />
+            <main className="content-viewport">
+              {renderView()}
+            </main>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <ERPProvider>
+        <App />
+      </ERPProvider>
+    );
+  </script>
+</body>
+</html>
