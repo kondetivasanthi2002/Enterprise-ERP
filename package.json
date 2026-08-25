@@ -3,7 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "index.js",
+  "bin": {
+    "apex-erp": "index.js"
+  },
   "scripts": {
+    "start": "node index.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
