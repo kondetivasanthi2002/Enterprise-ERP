@@ -22,7 +22,7 @@ export const ERPProvider = ({ children }) => {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [toastNotification, setToastNotification] = useState(null);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(true);
 
   const toggleAIChat = (openState) => {
     setIsAIChatOpen(prev => typeof openState === 'boolean' ? openState : !prev);

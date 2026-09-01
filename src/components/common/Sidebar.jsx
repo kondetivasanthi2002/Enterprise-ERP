@@ -13,7 +13,8 @@ import {
   BarChart3,
   ShieldCheck,
   Layers,
-  Activity
+  Activity,
+  Sparkles
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -30,7 +31,7 @@ const ICON_MAP = {
 };
 
 export const Sidebar = () => {
-  const { activeModule, setActiveModule } = useERP();
+  const { activeModule, setActiveModule, toggleAIChat, isAIChatOpen } = useERP();
 
   return (
     <aside style={{
@@ -78,6 +79,35 @@ export const Sidebar = () => {
         <div style={{ padding: '0.4rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Platform Modules
         </div>
+
+        {/* AI Copilot Sidebar Item */}
+        <button
+          onClick={toggleAIChat}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.85rem',
+            padding: '0.65rem 0.85rem',
+            borderRadius: 'var(--radius-sm)',
+            border: 'none',
+            background: isAIChatOpen ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.2))' : 'transparent',
+            color: '#a855f7',
+            fontWeight: '700',
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            textAlign: 'left',
+            marginBottom: '0.4rem',
+            borderLeft: isAIChatOpen ? '3px solid #a855f7' : '3px solid transparent'
+          }}
+        >
+          <Sparkles size={18} style={{ color: '#a855f7' }} />
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            Apex AI Assistant
+          </span>
+          <span className="badge badge-purple" style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', background: '#7c3aed', color: '#fff' }}>
+            AI
+          </span>
+        </button>
 
         {MODULES_INFO.map(mod => {
           const IconComp = ICON_MAP[mod.icon] || LayoutDashboard;
