@@ -2,6 +2,7 @@ import React from 'react';
 import { ERPProvider, useERP } from './context/ERPContext';
 import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
+import { AIChatAssistant } from './components/common/AIChatAssistant';
 
 import { DashboardModule } from './components/modules/DashboardModule';
 import { FinanceModule } from './components/modules/FinanceModule';
@@ -53,6 +54,7 @@ const MainContent = () => {
           {renderModule()}
         </main>
       </div>
+      <AIChatAssistant />
     </div>
   );
 };
