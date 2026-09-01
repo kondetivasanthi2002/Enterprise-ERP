@@ -12,7 +12,8 @@ export const Header = () => {
     searchQuery,
     setSearchQuery,
     toastNotification,
-    activeModule
+    activeModule,
+    toggleAIChat
   } = useERP();
 
   return (
@@ -91,6 +92,29 @@ export const Header = () => {
         {/* Theme Toggle */}
         <button className="btn-icon" onClick={toggleTheme} title="Toggle Dark/Light Mode">
           {theme === 'dark' ? <Sun size={18} style={{ color: '#f59e0b' }} /> : <Moon size={18} style={{ color: '#6366f1' }} />}
+        </button>
+
+        {/* AI Assistant Button */}
+        <button
+          onClick={toggleAIChat}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            color: '#ffffff',
+            border: 'none',
+            padding: '0.45rem 0.9rem',
+            borderRadius: '20px',
+            fontSize: '0.8rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+          }}
+          title="Open Apex AI Assistant Chat"
+        >
+          <Sparkles size={15} />
+          <span>Apex AI</span>
         </button>
 
         {/* Notifications */}

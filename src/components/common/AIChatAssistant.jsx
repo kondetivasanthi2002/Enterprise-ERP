@@ -3,10 +3,11 @@ import { Bot, Sparkles, Send, X, RefreshCw } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 
 export const AIChatAssistant = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { ledger, inventory, employees, isAIChatOpen, toggleAIChat } = useERP();
+  const isOpen = isAIChatOpen;
+  const setIsOpen = toggleAIChat;
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const { ledger, inventory, employees } = useERP();
   const messagesEndRef = useRef(null);
 
   const [messages, setMessages] = useState([
@@ -77,7 +78,7 @@ export const AIChatAssistant = () => {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', bottom: '28px', right: '28px', zIndex: 999999 }}>
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
@@ -86,14 +87,14 @@ export const AIChatAssistant = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            backgroundColor: '#2563eb',
+            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
             color: '#ffffff',
-            padding: '14px 20px',
+            padding: '14px 22px',
             borderRadius: '50px',
-            boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
-            border: 'none',
+            boxShadow: '0 10px 30px rgba(124, 58, 237, 0.5), 0 0 15px rgba(37, 99, 235, 0.4)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
             cursor: 'pointer',
-            fontWeight: '600',
+            fontWeight: '700',
             fontSize: '15px'
           }}
         >

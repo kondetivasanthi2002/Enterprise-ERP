@@ -22,6 +22,11 @@ export const ERPProvider = ({ children }) => {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [toastNotification, setToastNotification] = useState(null);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+
+  const toggleAIChat = (openState) => {
+    setIsAIChatOpen(prev => typeof openState === 'boolean' ? openState : !prev);
+  };
 
   // ERP Domain Data States
   const [financialHistory, setFinancialHistory] = useState([]);
@@ -140,6 +145,9 @@ export const ERPProvider = ({ children }) => {
       setSearchQuery,
       toastNotification,
       showToast,
+      isAIChatOpen,
+      setIsAIChatOpen,
+      toggleAIChat,
 
       // Enterprise Data
       financialHistory,
