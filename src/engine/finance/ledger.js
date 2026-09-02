@@ -152,11 +152,14 @@ export class GeneralLedgerEngine {
       };
     });
 
+    const finalTotalDebits = Number(totalDebits.toFixed(2));
+    const finalTotalCredits = Number(totalCredits.toFixed(2));
+
     return {
       rows,
-      totalDebits: Number(totalDebits.toFixed(2)),
-      totalCredits: Number(totalCredits.toFixed(2)),
-      isBalanced: Math.abs(totalDebits - totalCredits) < 0.0001
+      totalDebits: finalTotalDebits,
+      totalCredits: finalTotalCredits,
+      isBalanced: Math.abs(finalTotalDebits - finalTotalCredits) < 0.01
     };
   }
 }

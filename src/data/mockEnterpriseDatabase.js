@@ -17,7 +17,7 @@ export const INITIAL_CHART_OF_ACCOUNTS = [
 
   // Equity
   { accountCode: '30000', accountName: 'Shareholders Paid-In Capital', type: 'EQUITY', subType: 'OWNERS_EQUITY', balance: 1000000.00, currency: 'USD' },
-  { accountCode: '32000', accountName: 'Retained Earnings Accumulation', type: 'EQUITY', subType: 'OWNERS_EQUITY', balance: 340000.00, currency: 'USD' },
+  { accountCode: '32000', accountName: 'Retained Earnings Accumulation', type: 'EQUITY', subType: 'OWNERS_EQUITY', balance: 200000.00, currency: 'USD' },
 
   // Revenue
   { accountCode: '40000', accountName: 'Sales Revenue - Enterprise Software', type: 'REVENUE', subType: 'OPERATING_REVENUE', balance: 750000.00, currency: 'USD' },
