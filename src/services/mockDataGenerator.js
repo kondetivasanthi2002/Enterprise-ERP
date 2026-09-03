@@ -2,6 +2,7 @@
 
 export const SUBSIDIARIES = [
   { id: 'sub-global', name: 'Apex Global HQ (New York)', currency: 'USD', symbol: '$' },
+  { id: 'sub-india', name: 'Apex India Pvt Ltd (Bengaluru / Mumbai)', currency: 'INR', symbol: '₹' },
   { id: 'sub-emea', name: 'Apex EMEA Ltd (London)', currency: 'GBP', symbol: '£' },
   { id: 'sub-apac', name: 'Apex APAC Pte (Singapore)', currency: 'SGD', symbol: 'S$' },
   { id: 'sub-latam', name: 'Apex LATAM S.A. (São Paulo)', currency: 'BRL', symbol: 'R$' }
@@ -55,7 +56,7 @@ export const generateChartOfAccounts = () => [
 
 // Generate Invoices
 export const generateInvoices = () => {
-  const clients = ['Acme Tech Corp', 'Nexus Global Systems', 'Starlight Logistics', 'Vanguard Health', 'Hyperion Dynamics', 'Aetherium Energy', 'Quantum Dynamics', 'Omni Retail Partners'];
+  const clients = ['Tata Consultancy Services', 'Acme Tech Corp', 'Infosys Global Solutions', 'Nexus Global Systems', 'Reliance Enterprise', 'Starlight Logistics', 'Mahindra Tech', 'Vanguard Health'];
   const statuses = ['Paid', 'Pending', 'Overdue', 'Draft'];
   
   return Array.from({ length: 30 }, (_, i) => {
@@ -82,7 +83,7 @@ export const generateInvoices = () => {
 // Generate Inventory SKUs
 export const generateInventorySKUs = () => {
   const categories = ['Hardware Components', 'Robotic Sensors', 'Semiconductor Chips', 'Networking Equipment', 'Power Supplies'];
-  const warehouses = ['WH-Alpha (Chicago)', 'WH-Beta (Frankfurt)', 'WH-Gamma (Tokyo)', 'WH-Delta (Dallas)'];
+  const warehouses = ['WH-India (Bengaluru)', 'WH-Alpha (Chicago)', 'WH-Beta (Frankfurt)', 'WH-Gamma (Tokyo)', 'WH-Delta (Dallas)'];
   
   return Array.from({ length: 28 }, (_, i) => {
     const qtyOnHand = Math.floor(20 + Math.random() * 800);
@@ -108,8 +109,8 @@ export const generateInventorySKUs = () => {
 // Generate CRM Leads & Pipeline
 export const generateCRMLeads = () => {
   const stages = ['New Lead', 'Qualification', 'Proposal Sent', 'Contract Negotiation', 'Closed Won', 'Closed Lost'];
-  const companies = ['BioGenX Labs', 'CyberSec Sentinel', 'Orbital Aerospace', 'FinTech Horizon', 'Titan Mining Solutions', 'CloudScale Inc'];
-  const reps = ['Sarah Jenkins', 'David Chen', 'Marcus Vance', 'Elena Rostova'];
+  const companies = ['Tata Tech Innovations', 'BioGenX Labs', 'CyberSec Sentinel', 'Infosys Digital', 'Orbital Aerospace', 'FinTech Horizon'];
+  const reps = ['Aarav Sharma', 'Priya Patel', 'Sarah Jenkins', 'David Chen', 'Marcus Vance'];
 
   return Array.from({ length: 24 }, (_, i) => {
     const value = Math.floor(50000 + Math.random() * 350000);
