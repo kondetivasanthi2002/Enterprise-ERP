@@ -2,6 +2,7 @@ import React from 'react';
 import { ERPProvider, useERP } from './context/ERPContext';
 import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
+import { LoginScreen } from './components/common/LoginScreen';
 import { AIChatAssistant } from './components/common/AIChatAssistant';
 
 import { DashboardModule } from './components/modules/DashboardModule';
@@ -16,7 +17,11 @@ import { AnalyticsModule } from './components/modules/AnalyticsModule';
 import { AdminModule } from './components/modules/AdminModule';
 
 const MainContent = () => {
-  const { activeModule } = useERP();
+  const { isAuthenticated, activeModule } = useERP();
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
 
   const renderModule = () => {
     switch (activeModule) {

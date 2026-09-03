@@ -17,12 +17,36 @@ const ERPContext = createContext();
 
 export const ERPProvider = ({ children }) => {
   // Global App Settings
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [activeSubsidiary, setActiveSubsidiary] = useState(SUBSIDIARIES[0]);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [toastNotification, setToastNotification] = useState(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(true);
+
+  // Authentication State
+  const [user, setUser] = useState({
+    name: 'Alex Mercer',
+    email: 'admin@apexerp.com',
+    role: 'Chief Operating Officer',
+    avatar: 'AM'
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+
+  const login = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    showToast(`Welcome back, ${userData.name}! Logged in as ${userData.role}`, 'success');
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    showToast('Signed out of enterprise node session', 'info');
+  };
+
+  useEffect(() => {
+    document.body.className = 'light-theme';
+  }, []);
 
   const toggleAIChat = (openState) => {
     setIsAIChatOpen(prev => typeof openState === 'boolean' ? openState : !prev);
@@ -135,6 +159,10 @@ export const ERPProvider = ({ children }) => {
 
   return (
     <ERPContext.Provider value={{
+      user,
+      isAuthenticated,
+      login,
+      logout,
       theme,
       toggleTheme,
       activeSubsidiary,
