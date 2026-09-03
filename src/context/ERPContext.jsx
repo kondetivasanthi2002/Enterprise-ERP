@@ -14,6 +14,9 @@ import {
   generateProjects,
   generateAuditLogs
 } from '../services/mockDataGenerator';
+import { GlobalAuditEngine } from '../engine/core/auditEngine';
+import { GlobalRBACEngine } from '../engine/core/rbacEngine';
+import { GlobalTaxCalculator } from '../engine/finance/globalTaxEngine';
 
 const ERPContext = createContext();
 
@@ -97,9 +100,10 @@ export const ERPProvider = ({ children }) => {
     }, 4000);
   };
 
-  // Helper Actions (CRUD & Domain Actions with UUIDs & Input Sanitization)
+  // Hardened Actions with Deduplication & Cryptographic UUID Integrity
   const addInvoice = (newInv) => {
     const uuid = generateUUID();
+    const taxCalc = GlobalTaxCalculator.calculateTaxForOrder({ amount: Number(newInv.amount || 0), jurisdictionCode: 'US_NY' });
     const invWithId = {
       id: `INV-${uuid.substring(0, 8).toUpperCase()}`,
       uuid,
@@ -107,17 +111,24 @@ export const ERPProvider = ({ children }) => {
       status: 'Pending',
       currency: activeSubsidiary.currency,
       client: (newInv.client || 'New Enterprise Client').trim(),
-      amount: Number(newInv.amount || 0),
-      tax: Number((newInv.amount || 0) * 0.08),
-      total: Number(newInv.amount || 0) * 1.08,
+      amount: taxCalc.taxableAmount,
+      tax: taxCalc.taxAmount,
+      total: taxCalc.totalAmount,
       ...newInv
     };
-    setInvoices(prev => [invWithId, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setInvoices(prev => {
+      if (prev.some(inv => inv.id === invWithId.id || inv.uuid === invWithId.uuid)) return prev;
+      return [invWithId, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
+    GlobalAuditEngine.recordEvent({ user, action: 'INVOICE_CREATED', entity: 'Invoice', entityId: invWithId.id, newState: invWithId });
     showToast(`Invoice ${invWithId.id} created successfully for ${invWithId.client}`);
   };
 
   const updateInvoiceStatus = (id, newStatus) => {
     setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: newStatus.trim() } : inv));
+    GlobalAuditEngine.recordEvent({ user, action: 'INVOICE_STATUS_UPDATED', entity: 'Invoice', entityId: id, newState: { newStatus } });
     showToast(`Invoice ${id} status updated to ${newStatus}`);
   };
 
@@ -139,7 +150,13 @@ export const ERPProvider = ({ children }) => {
       status: qty < reorder ? 'Low Stock Warning' : 'Optimal Stock',
       barcode: `890${Math.floor(100000000 + Math.random() * 900000000)}`
     };
-    setInventorySKUs(prev => [skuRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setInventorySKUs(prev => {
+      if (prev.some(sku => sku.id === skuRecord.id || sku.uuid === skuRecord.uuid)) return prev;
+      return [skuRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
+    GlobalAuditEngine.recordEvent({ user, action: 'SKU_ADDED', entity: 'InventorySKU', entityId: skuRecord.id, newState: skuRecord });
     showToast(`SKU ${skuRecord.name} added to catalog successfully`);
   };
 
@@ -174,7 +191,12 @@ export const ERPProvider = ({ children }) => {
       owner: String(newLead.owner || user.name).trim(),
       createdDate: new Date().toISOString().split('T')[0]
     };
-    setCrmLeads(prev => [leadRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setCrmLeads(prev => {
+      if (prev.some(lead => lead.id === leadRecord.id || lead.uuid === leadRecord.uuid)) return prev;
+      return [leadRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`CRM Deal created for ${leadRecord.company}`);
   };
 
@@ -205,7 +227,12 @@ export const ERPProvider = ({ children }) => {
       joinDate: new Date().toISOString().split('T')[0],
       location: 'HQ New York'
     };
-    setEmployees(prev => [empRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setEmployees(prev => {
+      if (prev.some(e => e.id === empRecord.id || e.uuid === empRecord.uuid)) return prev;
+      return [empRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`Employee ${empRecord.name} onboarded successfully`);
   };
 
@@ -221,7 +248,12 @@ export const ERPProvider = ({ children }) => {
       orderDate: new Date().toISOString().split('T')[0],
       expectedDelivery: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     };
-    setProcurementPOs(prev => [poRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setProcurementPOs(prev => {
+      if (prev.some(po => po.id === poRecord.id || po.uuid === poRecord.uuid)) return prev;
+      return [poRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`Purchase Order ${poRecord.id} created for ${poRecord.vendor}`);
   };
 
@@ -244,7 +276,12 @@ export const ERPProvider = ({ children }) => {
       startDate: new Date().toISOString().split('T')[0],
       yieldPercentage: '100%'
     };
-    setMrpWorkOrders(prev => [woRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setMrpWorkOrders(prev => {
+      if (prev.some(wo => wo.id === woRecord.id || wo.uuid === woRecord.uuid)) return prev;
+      return [woRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`MRP Work Order ${woRecord.id} scheduled successfully`);
   };
 
@@ -264,13 +301,24 @@ export const ERPProvider = ({ children }) => {
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]
     };
-    setProjects(prev => [prjRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+
+    setProjects(prev => {
+      if (prev.some(p => p.id === prjRecord.id || p.uuid === prjRecord.uuid)) return prev;
+      return [prjRecord, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`Project ${prjRecord.name} initialized`);
   };
 
   const addJournalEntry = (accountCode, amount, type = 'debit') => {
+    if (!GlobalRBACEngine.hasPermission(user, 'FINANCE_POST_JOURNAL')) {
+      showToast(`Access Denied: User role ${user.role} lacks permission to post journal entries`, 'warning');
+      return;
+    }
+
     const uuid = generateUUID();
     const numericAmt = Number(amount || 0);
+
     setChartOfAccounts(prev => prev.map(acc => {
       if (acc.code === accountCode) {
         const delta = type === 'debit' ? numericAmt : -numericAmt;
@@ -278,19 +326,23 @@ export const ERPProvider = ({ children }) => {
       }
       return acc;
     }));
-    setAuditLogs(prev => [
-      {
-        id: `AUD-${uuid.substring(0, 8).toUpperCase()}`,
-        uuid,
-        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        user: user.email,
-        action: 'JOURNAL_ENTRY_POSTED',
-        ipAddress: '127.0.0.1',
-        status: 'SUCCESS',
-        details: `Posted $${numericAmt} ${type} to account ${accountCode}`.trim()
-      },
-      ...prev
-    ].slice(0, MAX_BATCH_SIZE));
+
+    const auditEntry = {
+      id: `AUD-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: user.email,
+      action: 'JOURNAL_ENTRY_POSTED',
+      ipAddress: '127.0.0.1',
+      status: 'SUCCESS',
+      details: `Posted $${numericAmt} ${type} to account ${accountCode}`.trim()
+    };
+
+    setAuditLogs(prev => {
+      if (prev.some(a => a.id === auditEntry.id || a.uuid === auditEntry.uuid)) return prev;
+      return [auditEntry, ...prev].slice(0, MAX_BATCH_SIZE);
+    });
+
     showToast(`Posted $${numericAmt} entry to account ${accountCode}`);
   };
 
