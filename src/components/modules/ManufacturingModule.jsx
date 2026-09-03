@@ -1,11 +1,38 @@
 import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import { DataTable } from '../common/DataTable';
-import { Cpu, Layers, CheckCircle2, AlertTriangle, Play } from 'lucide-react';
+import { Modal } from '../common/Modal';
+import { Cpu, Plus, Download } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
 
 export const ManufacturingModule = () => {
-  const { mrpWorkOrders, searchQuery } = useERP();
+  const { mrpWorkOrders, addMRPWorkOrder, searchQuery, showToast } = useERP();
   const [activeTab, setActiveTab] = useState('orders');
+  const [isWOModalOpen, setIsWOModalOpen] = useState(false);
+
+  // Form state
+  const [product, setProduct] = useState('');
+  const [targetQty, setTargetQty] = useState('200');
+  const [workCenter, setWorkCenter] = useState('Assembly Station #1');
+
+  const handleScheduleWO = (e) => {
+    e.preventDefault();
+    if (!product.trim()) return;
+    addMRPWorkOrder({
+      product: product.trim(),
+      targetQty: parseInt(targetQty, 10),
+      workCenter: workCenter.trim()
+    });
+    setProduct('');
+    setIsWOModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Work Order ID', 'Product', 'Workstation', 'Target Qty', 'Completed Qty', 'Yield %', 'Status', 'Start Date'];
+    const rows = mrpWorkOrders.map(w => [w.id, w.product, w.workCenter, w.targetQty, w.completedQty, w.yieldPercentage, w.status, w.startDate]);
+    exportToCSV('ApexERP_MRP_Work_Orders', headers, rows);
+    showToast('Exported MRP Work Orders to CSV successfully!');
+  };
 
   const woColumns = [
     { header: 'Work Order ID', accessor: 'id', render: (val) => <span className="mono" style={{ fontWeight: 700 }}>{val}</span> },
@@ -51,6 +78,14 @@ export const ManufacturingModule = () => {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Production scheduling, Work Order dispatching, Bill of Materials (BOM), and QC Yield rates.
           </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsWOModalOpen(true)}>
+            <Plus size={16} /> Schedule Work Order
+          </button>
         </div>
       </div>
 
@@ -101,6 +136,55 @@ export const ManufacturingModule = () => {
           </div>
         </div>
       )}
+
+      {/* Modal: Schedule Work Order */}
+      <Modal
+        isOpen={isWOModalOpen}
+        onClose={() => setIsWOModalOpen(false)}
+        title="Schedule Manufacturing Work Order"
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setIsWOModalOpen(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleScheduleWO}>Dispatch Order</button>
+          </>
+        }
+      >
+        <form onSubmit={handleScheduleWO} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="form-group">
+            <label className="form-label">Manufactured End Product</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. Solar Power Inverter Box"
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Target Units to Produce</label>
+              <input
+                type="number"
+                className="form-input"
+                value={targetQty}
+                onChange={(e) => setTargetQty(e.target.value)}
+                min="1"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Workstation Cell</label>
+              <select className="form-input" value={workCenter} onChange={(e) => setWorkCenter(e.target.value)}>
+                <option value="Assembly Station #1">Assembly Station #1</option>
+                <option value="Assembly Station #2">Assembly Station #2</option>
+                <option value="Robotic Solder Cell #3">Robotic Solder Cell #3</option>
+                <option value="QC Testing Bench #4">QC Testing Bench #4</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

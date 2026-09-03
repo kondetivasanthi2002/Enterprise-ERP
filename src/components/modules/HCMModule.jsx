@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import { DataTable } from '../common/DataTable';
 import { Modal } from '../common/Modal';
-import { UserCheck, Plus, FileText, DollarSign, Building } from 'lucide-react';
+import { UserCheck, Plus, FileText, Download } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
 
 export const HCMModule = () => {
-  const { employees, addEmployee, searchQuery, activeSubsidiary } = useERP();
+  const { employees, addEmployee, searchQuery, activeSubsidiary, showToast } = useERP();
   const [activeTab, setActiveTab] = useState('directory');
   const [isAddEmpModalOpen, setIsAddEmpModalOpen] = useState(false);
   const [selectedPaystub, setSelectedPaystub] = useState(null);
@@ -19,12 +20,12 @@ export const HCMModule = () => {
 
   const handleAddEmployeeSubmit = (e) => {
     e.preventDefault();
-    if (!name || !salary) return;
+    if (!name.trim() || !salary) return;
     addEmployee({
-      name,
-      email: email || `${name.toLowerCase().replace(/[^a-z]/g, '')}@apexerp.com`,
-      department,
-      role,
+      name: name.trim(),
+      email: email.trim() || `${name.toLowerCase().replace(/[^a-z]/g, '')}@apexerp.com`,
+      department: department.trim(),
+      role: role.trim(),
       salary: parseFloat(salary),
       location: 'HQ New York'
     });
@@ -32,6 +33,13 @@ export const HCMModule = () => {
     setEmail('');
     setSalary('');
     setIsAddEmpModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Emp ID', 'Name', 'Email', 'Department', 'Role', 'Annual Salary', 'Monthly Payroll', 'Status', 'Join Date'];
+    const rows = employees.map(e => [e.id, e.name, e.email, e.department, e.role, e.salary, e.monthlyPayroll, e.status, e.joinDate]);
+    exportToCSV('ApexERP_Employee_Directory', headers, rows);
+    showToast('Exported Employee Directory to CSV successfully!');
   };
 
   const empColumns = [
@@ -93,9 +101,14 @@ export const HCMModule = () => {
             Workforce headcount directory, automated payroll calculations, direct paystubs, and department budgets.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsAddEmpModalOpen(true)}>
-          <Plus size={16} /> Onboard Employee
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsAddEmpModalOpen(true)}>
+            <Plus size={16} /> Onboard Employee
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -166,7 +179,7 @@ export const HCMModule = () => {
           </>
         }
       >
-        <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleAddEmployeeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Full Employee Name</label>

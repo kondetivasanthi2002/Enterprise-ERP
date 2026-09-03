@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   SUBSIDIARIES,
+  MAX_BATCH_SIZE,
+  generateUUID,
   generateFinancialHistory,
   generateChartOfAccounts,
   generateInvoices,
@@ -26,9 +28,10 @@ export const ERPProvider = ({ children }) => {
 
   // Authentication State
   const [user, setUser] = useState({
+    id: 'usr_admin',
     name: 'Alex Mercer',
     email: 'admin@apexerp.com',
-    role: 'Chief Operating Officer',
+    role: 'SUPER_ADMIN',
     avatar: 'AM'
   });
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -36,7 +39,7 @@ export const ERPProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
     setIsAuthenticated(true);
-    showToast(`Welcome back, ${userData.name}! Logged in as ${userData.role}`, 'success');
+    showToast(`Welcome back, ${(userData.name || '').trim()}! Logged in as ${userData.role}`, 'success');
   };
 
   const logout = () => {
@@ -64,18 +67,18 @@ export const ERPProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
 
-  // Initialize Mock Data
+  // Initialize Mock Data with MAX_BATCH_SIZE safety caps
   useEffect(() => {
-    setFinancialHistory(generateFinancialHistory());
+    setFinancialHistory(generateFinancialHistory(12));
     setChartOfAccounts(generateChartOfAccounts());
-    setInvoices(generateInvoices());
-    setInventorySKUs(generateInventorySKUs());
-    setCrmLeads(generateCRMLeads());
-    setEmployees(generateEmployees());
-    setProcurementPOs(generateProcurementPOs());
-    setMrpWorkOrders(generateMRPWorkOrders());
-    setProjects(generateProjects());
-    setAuditLogs(generateAuditLogs());
+    setInvoices(generateInvoices(30));
+    setInventorySKUs(generateInventorySKUs(28));
+    setCrmLeads(generateCRMLeads(24));
+    setEmployees(generateEmployees(25));
+    setProcurementPOs(generateProcurementPOs(20));
+    setMrpWorkOrders(generateMRPWorkOrders(16));
+    setProjects(generateProjects(4));
+    setAuditLogs(generateAuditLogs(25));
   }, []);
 
   // Theme Toggler
@@ -88,32 +91,60 @@ export const ERPProvider = ({ children }) => {
 
   // Toast Notification Trigger
   const showToast = (message, type = 'success') => {
-    setToastNotification({ message, type });
+    setToastNotification({ message: String(message || '').trim(), type });
     setTimeout(() => {
       setToastNotification(null);
     }, 4000);
   };
 
-  // Helper Actions (CRUD & Domain Actions)
+  // Helper Actions (CRUD & Domain Actions with UUIDs & Input Sanitization)
   const addInvoice = (newInv) => {
+    const uuid = generateUUID();
     const invWithId = {
-      id: `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+      id: `INV-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
       date: new Date().toISOString().split('T')[0],
       status: 'Pending',
       currency: activeSubsidiary.currency,
+      client: (newInv.client || 'New Enterprise Client').trim(),
+      amount: Number(newInv.amount || 0),
+      tax: Number((newInv.amount || 0) * 0.08),
+      total: Number(newInv.amount || 0) * 1.08,
       ...newInv
     };
-    setInvoices([invWithId, ...invoices]);
+    setInvoices(prev => [invWithId, ...prev].slice(0, MAX_BATCH_SIZE));
     showToast(`Invoice ${invWithId.id} created successfully for ${invWithId.client}`);
   };
 
   const updateInvoiceStatus = (id, newStatus) => {
-    setInvoices(invoices.map(inv => inv.id === id ? { ...inv, status: newStatus } : inv));
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: newStatus.trim() } : inv));
     showToast(`Invoice ${id} status updated to ${newStatus}`);
   };
 
+  const addInventorySKU = (newSKU) => {
+    const uuid = generateUUID();
+    const qty = Math.max(0, parseInt(newSKU.qtyOnHand || 0, 10));
+    const cost = parseFloat(newSKU.unitCost || 0);
+    const reorder = parseInt(newSKU.reorderLevel || 100, 10);
+    const skuRecord = {
+      id: `SKU-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      name: String(newSKU.name || 'New Item Component').trim(),
+      category: String(newSKU.category || 'Hardware Components').trim(),
+      warehouse: String(newSKU.warehouse || 'WH-India (Bengaluru)').trim(),
+      qtyOnHand: qty,
+      reorderLevel: reorder,
+      unitCost: cost,
+      totalValue: (qty * cost).toFixed(2),
+      status: qty < reorder ? 'Low Stock Warning' : 'Optimal Stock',
+      barcode: `890${Math.floor(100000000 + Math.random() * 900000000)}`
+    };
+    setInventorySKUs(prev => [skuRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+    showToast(`SKU ${skuRecord.name} added to catalog successfully`);
+  };
+
   const updateInventoryStock = (id, newQty) => {
-    setInventorySKUs(inventorySKUs.map(item => {
+    setInventorySKUs(prev => prev.map(item => {
       if (item.id === id) {
         const qtyOnHand = Math.max(0, parseInt(newQty, 10));
         const isLowStock = qtyOnHand < item.reorderLevel;
@@ -129,8 +160,26 @@ export const ERPProvider = ({ children }) => {
     showToast(`Stock level for ${id} updated`, 'info');
   };
 
+  const addCRMLead = (newLead) => {
+    const uuid = generateUUID();
+    const leadRecord = {
+      id: `LEAD-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      company: String(newLead.company || 'New Lead Corp').trim(),
+      contactName: String(newLead.contactName || 'Primary Contact').trim(),
+      email: String(newLead.email || 'contact@lead.com').trim(),
+      value: Number(newLead.value || 50000),
+      stage: String(newLead.stage || 'Qualification').trim(),
+      probability: Number(newLead.probability || 30),
+      owner: String(newLead.owner || user.name).trim(),
+      createdDate: new Date().toISOString().split('T')[0]
+    };
+    setCrmLeads(prev => [leadRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+    showToast(`CRM Deal created for ${leadRecord.company}`);
+  };
+
   const updateCRMStage = (id, newStage) => {
-    setCrmLeads(crmLeads.map(lead => {
+    setCrmLeads(prev => prev.map(lead => {
       if (lead.id === id) {
         const prob = newStage === 'Closed Won' ? 100 : newStage === 'Closed Lost' ? 0 : lead.probability;
         return { ...lead, stage: newStage, probability: prob };
@@ -141,20 +190,108 @@ export const ERPProvider = ({ children }) => {
   };
 
   const addEmployee = (newEmp) => {
+    const uuid = generateUUID();
+    const salary = Number(newEmp.salary || 85000);
     const empRecord = {
-      id: `EMP-${Math.floor(500 + Math.random() * 500)}`,
+      id: `EMP-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      name: String(newEmp.name || 'New Employee').trim(),
+      email: String(newEmp.email || 'new.emp@apexerp.com').trim(),
+      department: String(newEmp.department || 'Engineering').trim(),
+      role: String(newEmp.role || 'Software Engineer').trim(),
+      salary,
+      monthlyPayroll: (salary / 12).toFixed(2),
       status: 'Active',
       joinDate: new Date().toISOString().split('T')[0],
-      monthlyPayroll: (newEmp.salary / 12).toFixed(2),
-      ...newEmp
+      location: 'HQ New York'
     };
-    setEmployees([empRecord, ...employees]);
+    setEmployees(prev => [empRecord, ...prev].slice(0, MAX_BATCH_SIZE));
     showToast(`Employee ${empRecord.name} onboarded successfully`);
   };
 
+  const addProcurementPO = (newPO) => {
+    const uuid = generateUUID();
+    const poRecord = {
+      id: `PO-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      vendor: String(newPO.vendor || 'Primary Supplier').trim(),
+      itemsCount: Number(newPO.itemsCount || 1),
+      totalAmount: Number(newPO.totalAmount || 10000),
+      status: 'Pending Approval',
+      orderDate: new Date().toISOString().split('T')[0],
+      expectedDelivery: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+    };
+    setProcurementPOs(prev => [poRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+    showToast(`Purchase Order ${poRecord.id} created for ${poRecord.vendor}`);
+  };
+
   const approvePurchaseOrder = (id) => {
-    setProcurementPOs(procurementPOs.map(po => po.id === id ? { ...po, status: 'Approved' } : po));
+    setProcurementPOs(prev => prev.map(po => po.id === id ? { ...po, status: 'Approved' } : po));
     showToast(`Purchase Order ${id} Approved by Finance Controller`);
+  };
+
+  const addMRPWorkOrder = (newWO) => {
+    const uuid = generateUUID();
+    const target = Number(newWO.targetQty || 100);
+    const woRecord = {
+      id: `WO-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      product: String(newWO.product || 'Standard Assembly').trim(),
+      targetQty: target,
+      completedQty: 0,
+      workCenter: String(newWO.workCenter || 'Assembly Station #1').trim(),
+      status: 'Queued',
+      startDate: new Date().toISOString().split('T')[0],
+      yieldPercentage: '100%'
+    };
+    setMrpWorkOrders(prev => [woRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+    showToast(`MRP Work Order ${woRecord.id} scheduled successfully`);
+  };
+
+  const addProject = (newPrj) => {
+    const uuid = generateUUID();
+    const budget = Number(newPrj.budget || 500000);
+    const prjRecord = {
+      id: `PRJ-${uuid.substring(0, 8).toUpperCase()}`,
+      uuid,
+      name: String(newPrj.name || 'New Enterprise Project').trim(),
+      client: String(newPrj.client || 'Enterprise Client').trim(),
+      budget,
+      actualCost: 0,
+      completion: 0,
+      status: 'On Track',
+      manager: String(newPrj.manager || user.name).trim(),
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0]
+    };
+    setProjects(prev => [prjRecord, ...prev].slice(0, MAX_BATCH_SIZE));
+    showToast(`Project ${prjRecord.name} initialized`);
+  };
+
+  const addJournalEntry = (accountCode, amount, type = 'debit') => {
+    const uuid = generateUUID();
+    const numericAmt = Number(amount || 0);
+    setChartOfAccounts(prev => prev.map(acc => {
+      if (acc.code === accountCode) {
+        const delta = type === 'debit' ? numericAmt : -numericAmt;
+        return { ...acc, balance: Math.max(0, acc.balance + delta) };
+      }
+      return acc;
+    }));
+    setAuditLogs(prev => [
+      {
+        id: `AUD-${uuid.substring(0, 8).toUpperCase()}`,
+        uuid,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        user: user.email,
+        action: 'JOURNAL_ENTRY_POSTED',
+        ipAddress: '127.0.0.1',
+        status: 'SUCCESS',
+        details: `Posted $${numericAmt} ${type} to account ${accountCode}`.trim()
+      },
+      ...prev
+    ].slice(0, MAX_BATCH_SIZE));
+    showToast(`Posted $${numericAmt} entry to account ${accountCode}`);
   };
 
   return (
@@ -177,22 +314,28 @@ export const ERPProvider = ({ children }) => {
       setIsAIChatOpen,
       toggleAIChat,
 
-      // Enterprise Data
+      // Enterprise Data & Hardened Actions
       financialHistory,
       chartOfAccounts,
       invoices,
       addInvoice,
       updateInvoiceStatus,
       inventorySKUs,
+      addInventorySKU,
       updateInventoryStock,
       crmLeads,
+      addCRMLead,
       updateCRMStage,
       employees,
       addEmployee,
       procurementPOs,
+      addProcurementPO,
       approvePurchaseOrder,
       mrpWorkOrders,
+      addMRPWorkOrder,
       projects,
+      addProject,
+      addJournalEntry,
       auditLogs
     }}>
       {children}

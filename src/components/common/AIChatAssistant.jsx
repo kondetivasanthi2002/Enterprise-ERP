@@ -260,12 +260,7 @@ export const AIChatAssistant = () => {
           }}
         >
           <Sparkles size={20} />
-          <span>🤖 Apex AI Assistant</span>
-          {totalBadgeAlerts > 0 && (
-            <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: '#ef4444', color: '#ffffff', fontSize: '11px', fontWeight: '800', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {totalBadgeAlerts}
-            </span>
-          )}
+          <span>Apex AI</span>
         </button>
       )}
 

@@ -1,11 +1,41 @@
 import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import { DataTable } from '../common/DataTable';
-import { Briefcase, Calendar, CheckSquare, Clock } from 'lucide-react';
+import { Modal } from '../common/Modal';
+import { Briefcase, Plus, Download } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
 
 export const ProjectsModule = () => {
-  const { projects, searchQuery, activeSubsidiary } = useERP();
+  const { projects, addProject, searchQuery, activeSubsidiary, showToast } = useERP();
   const [activeTab, setActiveTab] = useState('gantt');
+  const [isPrjModalOpen, setIsPrjModalOpen] = useState(false);
+
+  // Form State
+  const [name, setName] = useState('');
+  const [client, setClient] = useState('');
+  const [budget, setBudget] = useState('500000');
+  const [manager, setManager] = useState('Sarah Jenkins');
+
+  const handleCreateProject = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    addProject({
+      name: name.trim(),
+      client: client.trim() || 'Internal Infrastructure',
+      budget: parseFloat(budget || 500000),
+      manager: manager.trim()
+    });
+    setName('');
+    setClient('');
+    setIsPrjModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Project Code', 'Project Name', 'Client', 'Manager', 'Budget', 'Actual Cost', 'Completion %', 'Status'];
+    const rows = projects.map(p => [p.id, p.name, p.client, p.manager, p.budget, p.actualCost, p.completion, p.status]);
+    exportToCSV('ApexERP_Project_Portfolio_Report', headers, rows);
+    showToast('Exported Project Portfolio to CSV successfully!');
+  };
 
   const prjColumns = [
     { header: 'Project Code', accessor: 'id', render: (val) => <span className="mono" style={{ fontWeight: 700 }}>{val}</span> },
@@ -59,6 +89,14 @@ export const ProjectsModule = () => {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Enterprise project portfolio management, resource scheduling, cost variance, and Gantt milestone tracking.
           </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsPrjModalOpen(true)}>
+            <Plus size={16} /> Initialize Project
+          </button>
         </div>
       </div>
 
@@ -147,6 +185,65 @@ export const ProjectsModule = () => {
           />
         </div>
       )}
+
+      {/* Modal: Initialize Project */}
+      <Modal
+        isOpen={isPrjModalOpen}
+        onClose={() => setIsPrjModalOpen(false)}
+        title="Initialize New Enterprise Project"
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setIsPrjModalOpen(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleCreateProject}>Create Project</button>
+          </>
+        }
+      >
+        <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="form-group">
+            <label className="form-label">Project Title</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. Autonomous Robotic Logistics Setup"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Client Account</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Starlight Logistics"
+                value={client}
+                onChange={(e) => setClient(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Approved Budget ({activeSubsidiary.currency})</label>
+              <input
+                type="number"
+                className="form-input"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Assigned Project Manager</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Sarah Jenkins"
+              value={manager}
+              onChange={(e) => setManager(e.target.value)}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

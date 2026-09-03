@@ -9,7 +9,7 @@ export class AuditLogEngine {
 
   logEvent({ user, action, entity, entityId, previousState = null, newState = null, ipAddress = '127.0.0.1' }) {
     const entry = {
-      id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: `AUD-${crypto.randomUUID()}`,
       timestamp: new Date().toISOString(),
       userId: user ? user.id : 'system',
       userName: user ? user.name : 'System Engine',

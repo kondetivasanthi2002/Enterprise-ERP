@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
-import { BarChart3, Download, PieChart, Sliders, Sparkles } from 'lucide-react';
+import { BarChart3, Download, Sparkles, FileSpreadsheet } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
 
 export const AnalyticsModule = () => {
   const { financialHistory, inventorySKUs, crmLeads, employees, activeSubsidiary, showToast } = useERP();
@@ -31,6 +32,13 @@ export const AnalyticsModule = () => {
     showToast('Exported full BI telemetry dataset as JSON');
   };
 
+  const handleExportCSV = () => {
+    const headers = ['Month', 'Gross Revenue USD', 'Operating Expenses USD', 'Net Profit USD', 'Profit Margin %'];
+    const rows = financialHistory.map(f => [f.month, f.revenue, f.expenses, f.netProfit, f.margin]);
+    exportToCSV('ApexERP_BI_Financial_Telemetry', headers, rows);
+    showToast('Exported BI Analytics Telemetry to CSV successfully!');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header */}
@@ -41,9 +49,14 @@ export const AnalyticsModule = () => {
             Custom query builder, multi-dimensional charting engine, and BI dataset exporter.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={handleExportFullBI}>
-          <Download size={16} /> Export BI Dataset (.json)
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <FileSpreadsheet size={16} /> Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={handleExportFullBI}>
+            <Download size={16} /> Export BI Dataset (.json)
+          </button>
+        </div>
       </div>
 
       {/* Query Builder Control Bar */}

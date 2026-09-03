@@ -2,14 +2,23 @@ import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import { DataTable } from '../common/DataTable';
 import { Modal } from '../common/Modal';
-import { Package, AlertTriangle, Edit3, Barcode, Warehouse } from 'lucide-react';
+import { Package, AlertTriangle, Edit3, Barcode, Warehouse, Plus, Download } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
 
 export const InventoryModule = () => {
-  const { inventorySKUs, updateInventoryStock, searchQuery, activeSubsidiary } = useERP();
+  const { inventorySKUs, addInventorySKU, updateInventoryStock, searchQuery, activeSubsidiary, showToast } = useERP();
   const [activeTab, setActiveTab] = useState('catalog');
   const [editingItem, setEditingItem] = useState(null);
   const [newQty, setNewQty] = useState('');
   const [barcodeItem, setBarcodeItem] = useState(null);
+
+  // New SKU Modal Form state
+  const [isAddSKUModalOpen, setIsAddSKUModalOpen] = useState(false);
+  const [skuName, setSkuName] = useState('');
+  const [skuCategory, setSkuCategory] = useState('Hardware Components');
+  const [skuWarehouse, setSkuWarehouse] = useState('WH-India (Bengaluru)');
+  const [skuQty, setSkuQty] = useState('100');
+  const [skuCost, setSkuCost] = useState('50.00');
 
   const handleStockUpdate = (e) => {
     e.preventDefault();
@@ -17,6 +26,28 @@ export const InventoryModule = () => {
     updateInventoryStock(editingItem.id, newQty);
     setEditingItem(null);
     setNewQty('');
+  };
+
+  const handleAddSKU = (e) => {
+    e.preventDefault();
+    if (!skuName.trim()) return;
+    addInventorySKU({
+      name: skuName.trim(),
+      category: skuCategory.trim(),
+      warehouse: skuWarehouse.trim(),
+      qtyOnHand: parseInt(skuQty, 10),
+      unitCost: parseFloat(skuCost),
+      reorderLevel: 150
+    });
+    setSkuName('');
+    setIsAddSKUModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['SKU ID', 'Component Name', 'Category', 'Warehouse', 'Qty On Hand', 'Reorder Level', 'Unit Cost', 'Total Value', 'Status'];
+    const rows = inventorySKUs.map(s => [s.id, s.name, s.category, s.warehouse, s.qtyOnHand, s.reorderLevel, s.unitCost, s.totalValue, s.status]);
+    exportToCSV('ApexERP_Inventory_SKU_Catalog', headers, rows);
+    showToast('Exported Inventory Catalog to CSV successfully!');
   };
 
   const lowStockItems = inventorySKUs.filter(item => item.qtyOnHand < item.reorderLevel);
@@ -39,7 +70,7 @@ export const InventoryModule = () => {
     {
       header: 'Unit Cost',
       accessor: 'unitCost',
-      render: (val) => <span className="mono">{activeSubsidiary.symbol}{val.toFixed(2)}</span>
+      render: (val) => <span className="mono">{activeSubsidiary.symbol}{Number(val).toFixed(2)}</span>
     },
     {
       header: 'Stock Status',
@@ -85,8 +116,16 @@ export const InventoryModule = () => {
             Multi-warehouse SKU tracking, batch serial levels, and reorder point automation.
           </p>
         </div>
-        <div className="badge badge-warning" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-          <AlertTriangle size={15} /> {lowStockItems.length} SKUs At Risk
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div className="badge badge-warning" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+            <AlertTriangle size={15} /> {lowStockItems.length} SKUs At Risk
+          </div>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsAddSKUModalOpen(true)}>
+            <Plus size={16} /> Add Inventory SKU
+          </button>
         </div>
       </div>
 
@@ -131,6 +170,77 @@ export const InventoryModule = () => {
           />
         </div>
       )}
+
+      {/* Modal: Add New SKU */}
+      <Modal
+        isOpen={isAddSKUModalOpen}
+        onClose={() => setIsAddSKUModalOpen(false)}
+        title="Add New Inventory SKU"
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setIsAddSKUModalOpen(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleAddSKU}>Save Component</button>
+          </>
+        }
+      >
+        <form onSubmit={handleAddSKU} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="form-group">
+            <label className="form-label">Component Name</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. High-Density Microprocessor v2"
+              value={skuName}
+              onChange={(e) => setSkuName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-input" value={skuCategory} onChange={(e) => setSkuCategory(e.target.value)}>
+                <option value="Hardware Components">Hardware Components</option>
+                <option value="Robotic Sensors">Robotic Sensors</option>
+                <option value="Semiconductor Chips">Semiconductor Chips</option>
+                <option value="Networking Equipment">Networking Equipment</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Warehouse Facility</label>
+              <select className="form-input" value={skuWarehouse} onChange={(e) => setSkuWarehouse(e.target.value)}>
+                <option value="WH-India (Bengaluru)">WH-India (Bengaluru)</option>
+                <option value="WH-Alpha (Chicago)">WH-Alpha (Chicago)</option>
+                <option value="WH-Beta (Frankfurt)">WH-Beta (Frankfurt)</option>
+                <option value="WH-Gamma (Tokyo)">WH-Gamma (Tokyo)</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Initial Quantity On Hand</label>
+              <input
+                type="number"
+                className="form-input"
+                value={skuQty}
+                onChange={(e) => setSkuQty(e.target.value)}
+                min="0"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Unit Cost ({activeSubsidiary.currency})</label>
+              <input
+                type="number"
+                className="form-input"
+                value={skuCost}
+                onChange={(e) => setSkuCost(e.target.value)}
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
 
       {/* Modal: Adjust Stock */}
       {editingItem && (

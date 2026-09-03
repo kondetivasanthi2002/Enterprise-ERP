@@ -2,20 +2,28 @@ import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import { DataTable } from '../common/DataTable';
 import { Modal } from '../common/Modal';
-import { Plus, CheckCircle, FileText, DollarSign, PieChart, CreditCard } from 'lucide-react';
+import { Plus, CheckCircle, FileText, Download, ShieldAlert, BookOpen } from 'lucide-react';
+import { exportToCSV } from '../../utils/csvExporter';
+import { RBACEngine, PERMISSIONS } from '../../engine/core/auth';
 
 export const FinanceModule = () => {
   const {
+    user,
     invoices,
     addInvoice,
     updateInvoiceStatus,
     chartOfAccounts,
+    addJournalEntry,
     activeSubsidiary,
-    searchQuery
+    searchQuery,
+    showToast
   } = useERP();
+
+  const rbac = new RBACEngine(user);
 
   const [activeTab, setActiveTab] = useState('invoices');
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
   const [selectedInvoicePreview, setSelectedInvoicePreview] = useState(null);
 
   // New Invoice Form State
@@ -23,19 +31,62 @@ export const FinanceModule = () => {
   const [newAmount, setNewAmount] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
 
+  // New Journal Entry Form State
+  const [accountCode, setAccountCode] = useState('1010');
+  const [journalAmount, setJournalAmount] = useState('');
+  const [entryType, setEntryType] = useState('debit');
+
   const handleCreateInvoice = (e) => {
     e.preventDefault();
-    if (!newClient || !newAmount) return;
+    if (!newClient.trim() || !newAmount) return;
     addInvoice({
-      client: newClient,
+      client: newClient.trim(),
       amount: parseFloat(newAmount),
       tax: parseFloat((newAmount * 0.08).toFixed(2)),
       total: parseFloat((newAmount * 1.08).toFixed(2)),
-      dueDate: newDueDate || '2026-09-30'
+      dueDate: newDueDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
     });
     setNewClient('');
     setNewAmount('');
     setIsInvoiceModalOpen(false);
+  };
+
+  const handlePostJournalEntry = (e) => {
+    e.preventDefault();
+    if (!rbac.hasPermission(PERMISSIONS.FINANCE_POST_JOURNAL)) {
+      showToast(`[RBAC GUARD] Access Denied: Role '${user.role}' lacks permission 'FINANCE_POST_JOURNAL'`, 'danger');
+      return;
+    }
+    if (!journalAmount || parseFloat(journalAmount) <= 0) return;
+    addJournalEntry(accountCode, parseFloat(journalAmount), entryType);
+    setJournalAmount('');
+    setIsJournalModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    if (activeTab === 'invoices') {
+      const headers = ['Invoice ID', 'Client', 'Date', 'Due Date', 'Amount', 'Tax', 'Total', 'Status', 'Currency'];
+      const rows = invoices.map(i => [i.id, i.client, i.date, i.dueDate, i.amount, i.tax, i.total, i.status, i.currency]);
+      exportToCSV('ApexERP_Invoices_Report', headers, rows);
+      showToast('Exported Invoices to CSV successfully!');
+    } else if (activeTab === 'coa') {
+      const headers = ['Account Code', 'Account Name', 'Type', 'Balance', 'Status'];
+      const rows = chartOfAccounts.map(a => [a.code, a.name, a.type, a.balance, a.status]);
+      exportToCSV('ApexERP_Chart_of_Accounts', headers, rows);
+      showToast('Exported Chart of Accounts to CSV successfully!');
+    } else {
+      const headers = ['Category', 'Line Item', 'Amount USD'];
+      const rows = [
+        ['Revenue', 'Enterprise SaaS Subscription', 14500000],
+        ['Revenue', 'Hardware Devices', 6200000],
+        ['Expense', 'COGS', 7400000],
+        ['Expense', 'R&D Payroll', 2800000],
+        ['Expense', 'Sales & Marketing', 1950000],
+        ['Net Profit', 'Consolidated Operating Profit', 8550000]
+      ];
+      exportToCSV('ApexERP_PNL_Statement', headers, rows);
+      showToast('Exported P&L Statement to CSV successfully!');
+    }
   };
 
   // Invoice Columns
@@ -122,9 +173,17 @@ export const FinanceModule = () => {
             General Ledger, Accounts Receivable, Invoicing engine & Profitability reports.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsInvoiceModalOpen(true)}>
-          <Plus size={16} /> Create Invoice
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="btn btn-outline" onClick={() => setIsJournalModalOpen(true)}>
+            <BookOpen size={16} /> Post Journal Entry
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsInvoiceModalOpen(true)}>
+            <Plus size={16} /> Create Invoice
+          </button>
+        </div>
       </div>
 
       {/* Module Tabs */}
@@ -233,7 +292,7 @@ export const FinanceModule = () => {
           </>
         }
       >
-        <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleCreateInvoice} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
             <label className="form-label">Client / Customer Name</label>
             <input
@@ -265,6 +324,66 @@ export const FinanceModule = () => {
                 value={newDueDate}
                 onChange={(e) => setNewDueDate(e.target.value)}
               />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal: Post Journal Entry with RBAC Session Guard */}
+      <Modal
+        isOpen={isJournalModalOpen}
+        onClose={() => setIsJournalModalOpen(false)}
+        title="Post General Ledger Journal Entry"
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setIsJournalModalOpen(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handlePostJournalEntry}>Post Entry</button>
+          </>
+        }
+      >
+        <form onSubmit={handlePostJournalEntry} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {!rbac.hasPermission(PERMISSIONS.FINANCE_POST_JOURNAL) && (
+            <div style={{ padding: '10px 14px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldAlert size={16} />
+              <span>Session Guard Warning: Role <strong>{user.role}</strong> lacks <code>FINANCE_POST_JOURNAL</code> permission.</span>
+            </div>
+          )}
+          <div className="form-group">
+            <label className="form-label">Select Account Code</label>
+            <select
+              className="form-input"
+              value={accountCode}
+              onChange={(e) => setAccountCode(e.target.value)}
+            >
+              {chartOfAccounts.map(acc => (
+                <option key={acc.code} value={acc.code}>
+                  {acc.code} - {acc.name} ({acc.type})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Amount ({activeSubsidiary.currency})</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="5000"
+                value={journalAmount}
+                onChange={(e) => setJournalAmount(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Entry Action Type</label>
+              <select
+                className="form-input"
+                value={entryType}
+                onChange={(e) => setEntryType(e.target.value)}
+              >
+                <option value="debit">Debit (+ Asset / Expense)</option>
+                <option value="credit">Credit (+ Revenue / Liability)</option>
+              </select>
             </div>
           </div>
         </form>

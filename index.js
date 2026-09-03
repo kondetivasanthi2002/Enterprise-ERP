@@ -14,7 +14,21 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const HTML_PATH = path.join(__dirname, 'index.html');
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  if (req.url === '/api/db-status') {
+    try {
+      const { testConnection } = await import('./src/services/database.js');
+      const status = await testConnection();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(status));
+      return;
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+      return;
+    }
+  }
+
   let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
 
   if (!fs.existsSync(filePath)) {

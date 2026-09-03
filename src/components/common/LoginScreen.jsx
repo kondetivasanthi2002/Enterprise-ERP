@@ -1,96 +1,126 @@
 import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
-import { ShieldCheck, Lock, Mail, Eye, EyeOff, Sparkles, CheckCircle2, ArrowRight, UserCheck } from 'lucide-react';
-
-export const DEMO_ACCOUNTS = [
-  {
-    name: 'Alex Mercer',
-    email: 'admin@apexerp.com',
-    password: 'admin123',
-    role: 'Chief Operating Officer (Admin)',
-    avatar: 'AM',
-    color: '#0ea5e9'
-  },
-  {
-    name: 'Sarah Jenkins',
-    email: 'finance@apexerp.com',
-    password: 'finance123',
-    role: 'Chief Financial Officer (Finance)',
-    avatar: 'SJ',
-    color: '#0284c7'
-  },
-  {
-    name: 'Marcus Vance',
-    email: 'supply@apexerp.com',
-    password: 'supply123',
-    role: 'Global Supply Chain Director',
-    avatar: 'MV',
-    color: '#38bdf8'
-  },
-  {
-    name: 'Elena Rostova',
-    email: 'sales@apexerp.com',
-    password: 'sales123',
-    role: 'VP of Commercial Sales',
-    avatar: 'ER',
-    color: '#10b981'
-  }
-];
+import { ShieldCheck, Lock, Mail, Eye, EyeOff, Sparkles, User, UserPlus, ArrowRight, Building2, Cpu, BarChart3 } from 'lucide-react';
 
 export const LoginScreen = () => {
   const { login, showToast } = useERP();
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  // Form Fields
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('admin@apexerp.com');
+  const [role, setRole] = useState('Chief Operating Officer');
   const [password, setPassword] = useState('admin123');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Helper to fetch registered users from localStorage
+  const getRegisteredUsers = () => {
+    try {
+      const stored = localStorage.getItem('apex_erp_registered_users');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Helper to save new user to localStorage
+  const saveRegisteredUser = (newUser) => {
+    try {
+      const users = getRegisteredUsers();
+      users.push(newUser);
+      localStorage.setItem('apex_erp_registered_users', JSON.stringify(users));
+    } catch (e) {
+      console.error('Failed to save registered user', e);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
-      setError('Please enter both email address and password');
-      return;
-    }
-
-    setIsLoading(true);
-
-    setTimeout(() => {
-      const match = DEMO_ACCOUNTS.find(
-        acc => acc.email.toLowerCase() === email.toLowerCase() && acc.password === password
-      );
-
-      if (match) {
-        login(match);
-        setIsLoading(false);
-      } else if (email && password.length >= 4) {
-        // Allow custom login credentials for flexibility
-        login({
-          name: email.split('@')[0].toUpperCase(),
-          email: email,
-          role: 'Enterprise Administrator',
-          avatar: email.substring(0, 2).toUpperCase(),
-          color: '#0ea5e9'
-        });
-        setIsLoading(false);
-      } else {
-        setError('Invalid credentials. Use demo account credentials shown below.');
-        setIsLoading(false);
+    if (isRegistering) {
+      // --- CREATE ACCOUNT VALIDATION ---
+      if (!fullName.trim()) {
+        setError('Please enter your full name');
+        return;
       }
-    }, 400);
-  };
+      if (!email.trim() || !email.includes('@')) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      if (!password || password.length < 4) {
+        setError('Password must be at least 4 characters long');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
 
-  const handleQuickLogin = (account) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setError('');
-    setIsLoading(true);
+      setIsLoading(true);
 
-    setTimeout(() => {
-      login(account);
-      setIsLoading(false);
-    }, 300);
+      setTimeout(() => {
+        const initials = fullName
+          .trim()
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'US';
+
+        const newUser = {
+          name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password: password,
+          role: role,
+          avatar: initials,
+          color: '#0ea5e9'
+        };
+
+        saveRegisteredUser(newUser);
+        login(newUser);
+        setIsLoading(false);
+        showToast(`Account successfully created for ${fullName}!`, 'success');
+      }, 500);
+
+    } else {
+      // --- SIGN IN VALIDATION ---
+      if (!email || !password) {
+        setError('Please enter both email address and password');
+        return;
+      }
+
+      setIsLoading(true);
+
+      setTimeout(() => {
+        const registeredUsers = getRegisteredUsers();
+        const found = registeredUsers.find(
+          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+
+        if (found) {
+          login(found);
+        } else if (email && password.length >= 4) {
+          // Allow login for user credentials
+          const nameFromEmail = email.split('@')[0].toUpperCase();
+          const initials = nameFromEmail.substring(0, 2);
+          login({
+            name: nameFromEmail,
+            email: email,
+            role: role || 'Enterprise Administrator',
+            avatar: initials,
+            color: '#0ea5e9'
+          });
+        } else {
+          setError('Invalid credentials. Please check your email and password.');
+        }
+        setIsLoading(false);
+      }, 400);
+    }
   };
 
   return (
@@ -106,9 +136,9 @@ export const LoginScreen = () => {
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '1000px',
+        maxWidth: '960px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
         background: '#ffffff',
         borderRadius: '24px',
         boxShadow: '0 20px 60px rgba(14, 165, 233, 0.2)',
@@ -116,11 +146,11 @@ export const LoginScreen = () => {
         border: '1px solid #bae6fd'
       }}>
         
-        {/* Left Form Box */}
+        {/* Left Authentication Form Box */}
         <div style={{ padding: '3rem 2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           
           {/* Logo Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.5rem' }}>
             <div style={{
               width: '46px',
               height: '46px',
@@ -144,11 +174,13 @@ export const LoginScreen = () => {
             </div>
           </div>
 
-          <h2 style={{ fontSize: '1.65rem', fontWeight: '800', color: '#0c4a6e', marginBottom: '0.35rem' }}>
-            Sign In to Enterprise Node
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0c4a6e', marginBottom: '0.35rem' }}>
+            {isRegistering ? 'Create New Account' : 'Sign In to Enterprise Node'}
           </h2>
-          <p style={{ fontSize: '0.875rem', color: '#0369a1', marginBottom: '1.75rem' }}>
-            Enter your credentials or select a quick demo profile below.
+          <p style={{ fontSize: '0.85rem', color: '#0369a1', marginBottom: '1.5rem' }}>
+            {isRegistering
+              ? 'Enter your details below to set up your enterprise user account.'
+              : 'Enter your credentials to access your ERP dashboard.'}
           </p>
 
           {error && (
@@ -166,16 +198,36 @@ export const LoginScreen = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            
+            {/* Full Name Field (Register Mode Only) */}
+            {isRegistering && (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', fontSize: '0.825rem' }}>Full Name</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#0369a1' }} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Alex Mercer"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    style={{ paddingLeft: '2.5rem', width: '100%', borderRadius: '10px', border: '1px solid #bae6fd', background: '#f0f7ff', color: '#0c4a6e' }}
+                    required={isRegistering}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Email Field */}
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700' }}>Email Address / Username</label>
+              <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', fontSize: '0.825rem' }}>Work Email Address</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#0369a1' }} />
                 <input
                   type="email"
                   className="form-input"
-                  placeholder="admin@apexerp.com"
+                  placeholder="user@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ paddingLeft: '2.5rem', width: '100%', borderRadius: '10px', border: '1px solid #bae6fd', background: '#f0f7ff', color: '#0c4a6e' }}
@@ -184,13 +236,44 @@ export const LoginScreen = () => {
               </div>
             </div>
 
+            {/* Role Selection Dropdown (Register Mode Only) */}
+            {isRegistering && (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', fontSize: '0.825rem' }}>Enterprise Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #bae6fd',
+                    background: '#f0f7ff',
+                    color: '#0c4a6e',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="Chief Operating Officer">Chief Operating Officer (Admin)</option>
+                  <option value="Chief Financial Officer">Chief Financial Officer (Finance)</option>
+                  <option value="Global Supply Chain Director">Global Supply Chain Director</option>
+                  <option value="VP of Commercial Sales">VP of Commercial Sales</option>
+                  <option value="HR & Operations Lead">HR & Operations Lead</option>
+                  <option value="Enterprise Systems Specialist">Enterprise Systems Specialist</option>
+                </select>
+              </div>
+            )}
+
             {/* Password Field */}
             <div className="form-group" style={{ margin: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', margin: 0 }}>Password</label>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); showToast('Demo Password Reset link generated', 'info'); }} style={{ fontSize: '0.75rem', color: '#0ea5e9', fontWeight: '600', textDecoration: 'none' }}>
-                  Forgot Password?
-                </a>
+                <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', fontSize: '0.825rem', margin: 0 }}>Password</label>
+                {!isRegistering && (
+                  <a href="#forgot" onClick={(e) => { e.preventDefault(); showToast('Password Reset link generated', 'info'); }} style={{ fontSize: '0.75rem', color: '#0ea5e9', fontWeight: '600', textDecoration: 'none' }}>
+                    Forgot Password?
+                  </a>
+                )}
               </div>
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#0369a1' }} />
@@ -212,6 +295,25 @@ export const LoginScreen = () => {
                 </button>
               </div>
             </div>
+
+            {/* Confirm Password Field (Register Mode Only) */}
+            {isRegistering && (
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ color: '#0c4a6e', fontWeight: '700', fontSize: '0.825rem' }}>Confirm Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#0369a1' }} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{ paddingLeft: '2.5rem', width: '100%', borderRadius: '10px', border: '1px solid #bae6fd', background: '#f0f7ff', color: '#0c4a6e' }}
+                    required={isRegistering}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
@@ -236,19 +338,46 @@ export const LoginScreen = () => {
               }}
             >
               {isLoading ? (
-                <span>Authenticating Node...</span>
+                <span>{isRegistering ? 'Creating Account...' : 'Authenticating Node...'}</span>
               ) : (
                 <>
-                  <span>Sign In to Dashboard</span>
-                  <ArrowRight size={18} />
+                  <span>{isRegistering ? 'Create Account & Sign In' : 'Sign In to Dashboard'}</span>
+                  {isRegistering ? <UserPlus size={18} /> : <ArrowRight size={18} />}
                 </>
               )}
             </button>
           </form>
 
+          {/* Toggle between Login and Register */}
+          <div style={{ marginTop: '1.75rem', textAlign: 'center', paddingTop: '1.25rem', borderTop: '1px solid #e0f2fe' }}>
+            {isRegistering ? (
+              <p style={{ fontSize: '0.85rem', color: '#0369a1', margin: 0 }}>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsRegistering(false); setError(''); }}
+                  style={{ background: 'none', border: 'none', color: '#0ea5e9', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Sign In Here
+                </button>
+              </p>
+            ) : (
+              <p style={{ fontSize: '0.85rem', color: '#0369a1', margin: 0 }}>
+                Don't have an enterprise account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsRegistering(true); setError(''); }}
+                  style={{ background: 'none', border: 'none', color: '#0ea5e9', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Create an Account
+                </button>
+              </p>
+            )}
+          </div>
+
         </div>
 
-        {/* Right Side Demo Credentials Box */}
+        {/* Right Side Enterprise Showcase Branding Box */}
         <div style={{
           background: 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%)',
           padding: '3rem 2.5rem',
@@ -258,62 +387,48 @@ export const LoginScreen = () => {
           justifyContent: 'space-between'
         }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.85rem', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.2)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '1.25rem' }}>
-              <Sparkles size={14} /> Quick Demo Access Profiles
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.85rem', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.2)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '1.5rem' }}>
+              <Sparkles size={14} /> ApexERP Enterprise Platform
             </div>
             
-            <h3 style={{ fontSize: '1.35rem', fontWeight: '800', marginBottom: '0.5rem', color: '#ffffff' }}>
-              Select a Demo Role to Sign In Instantly:
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.75rem', color: '#ffffff', lineHeight: 1.25 }}>
+              Enterprise Resource Planning Engine
             </h3>
-            <p style={{ fontSize: '0.825rem', color: '#e0f2fe', marginBottom: '1.5rem' }}>
-              Click any profile card below to auto-authenticate with predefined enterprise roles & permissions.
+            <p style={{ fontSize: '0.875rem', color: '#e0f2fe', marginBottom: '2rem', lineHeight: 1.6 }}>
+              Seamlessly unify global finance, MRP manufacturing, supply chain, and commercial sales with embedded real-time AI copilot intelligence.
             </p>
 
-            {/* Demo Credentials Cards Grid */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {DEMO_ACCOUNTS.map((acc, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleQuickLogin(acc)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    padding: '0.85rem 1.1rem',
-                    borderRadius: '14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                    <div style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '50%',
-                      background: acc.color,
-                      color: '#ffffff',
-                      fontWeight: '800',
-                      fontSize: '0.85rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {acc.avatar}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: '800', color: '#0c4a6e' }}>{acc.name}</div>
-                      <div style={{ fontSize: '0.725rem', color: '#0369a1', fontWeight: '600' }}>{acc.role}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'var(--font-mono)' }}>
-                        {acc.email} | Pass: <span style={{ color: '#0ea5e9', fontWeight: '700' }}>{acc.password}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <UserCheck size={18} style={{ color: '#0ea5e9' }} />
+            {/* Feature Highlights List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                <div style={{ padding: '0.5rem', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
+                  <Building2 size={20} />
                 </div>
-              ))}
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>Multi-Subsidiary Financials</h4>
+                  <p style={{ margin: 0, fontSize: '0.775rem', color: '#e0f2fe' }}>Real-time GL consolidation across global currencies & multi-entity structures.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                <div style={{ padding: '0.5rem', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
+                  <Cpu size={20} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>Apex AI Copilot Assistant</h4>
+                  <p style={{ margin: 0, fontSize: '0.775rem', color: '#e0f2fe' }}>Natural language query engine with voice control & automated workflow execution.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                <div style={{ padding: '0.5rem', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
+                  <BarChart3 size={20} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>Real-Time Supply Chain Telemetry</h4>
+                  <p style={{ margin: 0, fontSize: '0.775rem', color: '#e0f2fe' }}>Automated reorder triggers, FIFO stock valuation, and MRP material requirements.</p>
+                </div>
+              </div>
             </div>
 
           </div>

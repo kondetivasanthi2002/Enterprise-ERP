@@ -51,7 +51,7 @@ export class InventoryEngine {
     const fifoQueue = this.fifoQueuesMap.get(sku) || [];
 
     const batchRecord = {
-      batchId: `BATCH-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      batchId: `BATCH-${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
       batchNo: batchNo || `B-${Date.now()}`,
       quantity: Number(quantity),
       remainingQuantity: Number(quantity),
@@ -67,7 +67,7 @@ export class InventoryEngine {
     item.costPrice = Number((item.inventoryValue / (item.totalQuantityOnHand || 1)).toFixed(2)); // Weighted Avg Cost fallback indicator
 
     const movement = {
-      id: `STK-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: `STK-${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
       timestamp: new Date().toISOString(),
       sku,
       itemName: item.name,
@@ -131,7 +131,7 @@ export class InventoryEngine {
     const unitCOGS = Number((totalCostOfGoodsSold / quantity).toFixed(2));
 
     const movement = {
-      id: `STK-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: `STK-${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
       timestamp: new Date().toISOString(),
       sku,
       itemName: item.name,
