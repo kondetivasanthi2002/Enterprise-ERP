@@ -4,48 +4,48 @@
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Color Palette - Dark Theme Default */
-  --bg-app: #0b0f19;
-  --bg-sidebar: #111827;
-  --bg-header: rgba(17, 24, 39, 0.85);
-  --bg-card: #1f293d;
-  --bg-card-hover: #26334d;
-  --bg-input: #151d2a;
-  --bg-elevated: #28354e;
+  /* Color Palette - White & Sky Blue Theme Default */
+  --bg-app: #f0f7ff;
+  --bg-sidebar: #ffffff;
+  --bg-header: rgba(255, 255, 255, 0.92);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f9ff;
+  --bg-input: #f0f9ff;
+  --bg-elevated: #e0f2fe;
   
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-strong: rgba(255, 255, 255, 0.16);
+  --border-color: #e0f2fe;
+  --border-color-strong: #bae6fd;
 
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-subtle: #6b7280;
+  --text-main: #0c4a6e;
+  --text-muted: #0369a1;
+  --text-subtle: #64748b;
 
-  /* Brand & Accent Colors */
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #4f46e5;
-  --accent-primary-light: rgba(99, 102, 241, 0.15);
+  /* Brand & Accent Colors - Sky Blue Palette */
+  --accent-primary: #0ea5e9;
+  --accent-primary-hover: #0284c7;
+  --accent-primary-light: rgba(14, 165, 233, 0.12);
   
-  --accent-secondary: #06b6d4;
-  --accent-purple: #8b5cf6;
+  --accent-secondary: #38bdf8;
+  --accent-purple: #0284c7;
 
   /* Status Colors */
   --color-success: #10b981;
-  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-success-bg: rgba(16, 185, 129, 0.12);
   
   --color-warning: #f59e0b;
-  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
 
   --color-danger: #ef4444;
-  --color-danger-bg: rgba(239, 68, 68, 0.15);
+  --color-danger-bg: rgba(239, 68, 68, 0.12);
 
-  --color-info: #3b82f6;
-  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info: #0ea5e9;
+  --color-info-bg: rgba(14, 165, 233, 0.12);
 
   /* Elevation & Glow Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45);
-  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.25);
+  --shadow-sm: 0 2px 6px rgba(14, 165, 233, 0.08);
+  --shadow-md: 0 4px 16px rgba(14, 165, 233, 0.12);
+  --shadow-lg: 0 12px 28px rgba(14, 165, 233, 0.2);
+  --glow-primary: 0 0 20px rgba(14, 165, 233, 0.35);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -56,26 +56,30 @@
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Light Theme Override */
-body.light-theme {
-  --bg-app: #f4f6f9;
+/* White & Sky Blue Theme Rules */
+body.light-theme, body.dark-theme, body {
+  --bg-app: #f0f7ff;
   --bg-sidebar: #ffffff;
-  --bg-header: rgba(255, 255, 255, 0.9);
+  --bg-header: rgba(255, 255, 255, 0.92);
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --bg-input: #f1f5f9;
-  --bg-elevated: #e2e8f0;
+  --bg-card-hover: #f0f9ff;
+  --bg-input: #f0f9ff;
+  --bg-elevated: #e0f2fe;
 
-  --border-color: #e2e8f0;
-  --border-color-strong: #cbd5e1;
+  --border-color: #e0f2fe;
+  --border-color-strong: #bae6fd;
 
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-subtle: #94a3b8;
+  --text-main: #0c4a6e;
+  --text-muted: #0369a1;
+  --text-subtle: #64748b;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  --accent-primary: #0ea5e9;
+  --accent-primary-hover: #0284c7;
+  --accent-primary-light: rgba(14, 165, 233, 0.12);
+
+  --shadow-sm: 0 2px 6px rgba(14, 165, 233, 0.08);
+  --shadow-md: 0 4px 16px rgba(14, 165, 233, 0.12);
+  --shadow-lg: 0 12px 28px rgba(14, 165, 233, 0.2);
 }
 
 /* Reset & Global Elements */
